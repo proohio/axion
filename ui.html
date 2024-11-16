@@ -126,11 +126,8 @@ function UILib.CreateWindow(title)
     function Window:CreateTab(name)
         local Tab = {}
         
+        -- Create tab button
         local TabButton = Instance.new("TextButton")
-        local TabContent = Instance.new("ScrollingFrame")
-        local UIListLayout = Instance.new("UIListLayout")
-        
-        -- Style tab button
         TabButton.Name = name.."Tab"
         TabButton.Parent = TabContainer
         TabButton.Size = UDim2.new(1, -10, 0, 35)
@@ -142,18 +139,30 @@ function UILib.CreateWindow(title)
         TabButton.Font = Enum.Font.GothamSemibold
         ApplyCornerRadius(TabButton, 6)
         
-        -- Style tab content
+        -- Create tab content container
+        local TabContent = Instance.new("ScrollingFrame")
         TabContent.Name = name.."Content"
         TabContent.Parent = ContentContainer
         TabContent.Size = UDim2.new(1, -20, 1, -20)
         TabContent.Position = UDim2.new(0, 10, 0, 10)
         TabContent.BackgroundTransparency = 1
         TabContent.ScrollBarThickness = 2
+        TabContent.ScrollBarImageColor3 = Color3.fromRGB(100, 100, 100)
         TabContent.Visible = false
+        TabContent.AutomaticCanvasSize = Enum.AutomaticSize.Y
         
+        -- Add list layout to tab content
+        local UIListLayout = Instance.new("UIListLayout")
         UIListLayout.Parent = TabContent
         UIListLayout.Padding = UDim.new(0, 8)
         UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+        UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+        
+        -- Add padding
+        local UIPadding = Instance.new("UIPadding")
+        UIPadding.Parent = TabContent
+        UIPadding.PaddingTop = UDim.new(0, 10)
+        UIPadding.PaddingBottom = UDim.new(0, 10)
         
         -- Tab button click handler
         TabButton.MouseButton1Click:Connect(function()
@@ -176,23 +185,20 @@ function UILib.CreateWindow(title)
             TabButton.MouseButton1Click:Fire()
         end
         
-        table.insert(tabs, Tab)
-        
         -- Add elements to tab
         function Tab:AddButton(text, callback)
             local Button = Instance.new("TextButton")
-            Button.Size = UDim2.new(1, 0, 0, 35)
+            Button.Name = text.."Button"
+            Button.Parent = TabContent
+            Button.Size = UDim2.new(1, -20, 0, 35)
             Button.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
             Button.Text = text
             Button.TextColor3 = Color3.fromRGB(255, 255, 255)
             Button.TextSize = 14
             Button.Font = Enum.Font.Gotham
-            Button.Parent = TabContent
             ApplyCornerRadius(Button, 6)
             
-            Button.MouseButton1Click:Connect(callback)
-            
-            -- Hover effect
+            -- Add hover effects
             Button.MouseEnter:Connect(function()
                 TweenService:Create(Button, TweenInfo.new(0.2), {
                     BackgroundColor3 = Color3.fromRGB(50, 50, 50)
@@ -204,8 +210,28 @@ function UILib.CreateWindow(title)
                     BackgroundColor3 = Color3.fromRGB(40, 40, 40)
                 }):Play()
             end)
+            
+            -- Add click effect
+            Button.MouseButton1Click:Connect(function()
+                TweenService:Create(Button, TweenInfo.new(0.1), {
+                    BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+                }):Play()
+                
+                task.spawn(function()
+                    callback()
+                end)
+                
+                task.wait(0.1)
+                
+                TweenService:Create(Button, TweenInfo.new(0.1), {
+                    BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+                }):Play()
+            end)
+            
+            return Button
         end
         
+        table.insert(tabs, Tab)
         return Tab
     end
     
