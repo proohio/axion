@@ -826,6 +826,29 @@ function UILib.CreateWindow(title)
             return ColorpickerFrame
         end
         
+        function Tab:AddLabel(text)
+            local Label = Instance.new("TextLabel")
+            Label.Name = text.."Label"
+            Label.Parent = TabContent
+            Label.Size = UDim2.new(1, -20, 0, 35)
+            Label.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+            Label.Text = text
+            Label.TextColor3 = Color3.fromRGB(255, 255, 255)
+            Label.TextSize = 14
+            Label.Font = Enum.Font.Gotham
+            Label.BorderSizePixel = 0
+            ApplyCornerRadius(Label, 6)
+            
+            -- Add to section functionality
+            function Section:AddLabel(text)
+                local Label = Tab:AddLabel(text)
+                Label.Parent = SectionContent
+                return Label
+            end
+            
+            return Label
+        end
+        
         table.insert(tabs, Tab)
         return Tab
     end
