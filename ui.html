@@ -692,14 +692,61 @@ function UILib.CreateWindow(title)
             ColorButton.Parent = ColorpickerFrame
             ApplyCornerRadius(ColorButton, 4)
 
-            -- Create color picker popup
+            -- Create color picker popup (change parent to CoreGui)
             local ColorPickerPopup = Instance.new("Frame")
             ColorPickerPopup.Size = UDim2.new(0, 200, 0, 200)
-            ColorPickerPopup.Position = UDim2.new(1, 10, 0, 0)
             ColorPickerPopup.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
             ColorPickerPopup.Visible = false
-            ColorPickerPopup.Parent = ColorpickerFrame
+            ColorPickerPopup.ZIndex = 100 -- Set high ZIndex
             ApplyCornerRadius(ColorPickerPopup, 6)
+            
+            -- Create a ScreenGui for the popup
+            local PopupGui = Instance.new("ScreenGui")
+            PopupGui.Name = "ColorPickerPopup"
+            PopupGui.DisplayOrder = 999 -- Set high DisplayOrder
+            PopupGui.Parent = game:GetService("CoreGui")
+            ColorPickerPopup.Parent = PopupGui
+
+            -- Update the toggle function to position popup relative to screen
+            ColorButton.MouseButton1Click:Connect(function()
+                ColorPickerPopup.Visible = not ColorPickerPopup.Visible
+                if ColorPickerPopup.Visible then
+                    local buttonPos = ColorButton.AbsolutePosition
+                    local buttonSize = ColorButton.AbsoluteSize
+                    ColorPickerPopup.Position = UDim2.new(0, buttonPos.X - ColorPickerPopup.Size.X.Offset - 10, 
+                                                         0, buttonPos.Y)
+                end
+            end)
+
+            -- Make sure all children have appropriate ZIndex
+            local function setHighZIndex(instance)
+                instance.ZIndex = 100
+                for _, child in pairs(instance:GetChildren()) do
+                    if child:IsA("GuiObject") then
+                        child.ZIndex = 100
+                        setHighZIndex(child)
+                    end
+                end
+            end
+            
+            setHighZIndex(ColorPickerPopup)
+
+            -- Add click detection to close popup when clicking outside
+            local function isInside(frame, position)
+                local framePos = frame.AbsolutePosition
+                local frameSize = frame.AbsoluteSize
+                return position.X >= framePos.X and position.X <= framePos.X + frameSize.X
+                   and position.Y >= framePos.Y and position.Y <= framePos.Y + frameSize.Y
+            end
+
+            UserInputService.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    local mousePos = UserInputService:GetMouseLocation()
+                    if ColorPickerPopup.Visible and not isInside(ColorPickerPopup, mousePos) and not isInside(ColorButton, mousePos) then
+                        ColorPickerPopup.Visible = false
+                    end
+                end
+            end)
 
             -- Add color wheel
             local ColorWheel = Instance.new("ImageButton")
