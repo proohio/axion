@@ -145,11 +145,13 @@ function UILib.CreateWindow(title)
         TabContent.Parent = ContentContainer
         TabContent.Size = UDim2.new(1, -20, 1, -20)
         TabContent.Position = UDim2.new(0, 10, 0, 10)
-        TabContent.BackgroundTransparency = 1
+        TabContent.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+        TabContent.BackgroundTransparency = 0.5
         TabContent.ScrollBarThickness = 2
         TabContent.ScrollBarImageColor3 = Color3.fromRGB(100, 100, 100)
         TabContent.Visible = false
         TabContent.AutomaticCanvasSize = Enum.AutomaticSize.Y
+        TabContent.CanvasSize = UDim2.new(0, 0, 0, 0)
         
         -- Add list layout to tab content
         local UIListLayout = Instance.new("UIListLayout")
@@ -163,6 +165,8 @@ function UILib.CreateWindow(title)
         UIPadding.Parent = TabContent
         UIPadding.PaddingTop = UDim.new(0, 10)
         UIPadding.PaddingBottom = UDim.new(0, 10)
+        UIPadding.PaddingLeft = UDim.new(0, 10)
+        UIPadding.PaddingRight = UDim.new(0, 10)
         
         -- Tab button click handler
         TabButton.MouseButton1Click:Connect(function()
@@ -187,6 +191,8 @@ function UILib.CreateWindow(title)
         
         -- Add elements to tab
         function Tab:AddButton(text, callback)
+            print("Creating button:", text) -- Debug print
+            
             local Button = Instance.new("TextButton")
             Button.Name = text.."Button"
             Button.Parent = TabContent
@@ -196,7 +202,11 @@ function UILib.CreateWindow(title)
             Button.TextColor3 = Color3.fromRGB(255, 255, 255)
             Button.TextSize = 14
             Button.Font = Enum.Font.Gotham
+            Button.Position = UDim2.new(0, 10, 0, 0) -- Add explicit position
+            Button.Visible = true -- Make sure it's visible
             ApplyCornerRadius(Button, 6)
+            
+            print("Button created:", Button:GetFullName()) -- Debug print
             
             -- Add hover effects
             Button.MouseEnter:Connect(function()
@@ -211,21 +221,9 @@ function UILib.CreateWindow(title)
                 }):Play()
             end)
             
-            -- Add click effect
             Button.MouseButton1Click:Connect(function()
-                TweenService:Create(Button, TweenInfo.new(0.1), {
-                    BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-                }):Play()
-                
-                task.spawn(function()
-                    callback()
-                end)
-                
-                task.wait(0.1)
-                
-                TweenService:Create(Button, TweenInfo.new(0.1), {
-                    BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-                }):Play()
+                print("Button clicked:", text) -- Debug print
+                callback()
             end)
             
             return Button
