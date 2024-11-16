@@ -665,112 +665,141 @@ function UILib.CreateWindow(title)
         end
         
         function Tab:AddColorpicker(text, default, callback)
-            local Colorpicker = {
-                Value = default or Color3.fromRGB(255, 255, 255),
-                Toggled = false,
-            }
-            
-            -- Create color selection indicators
-            local ColorSelection = Instance.new("ImageLabel")
-            ColorSelection.Size = UDim2.new(0, 18, 0, 18)
-            ColorSelection.Position = UDim2.new(select(3, Color3.toHSV(Colorpicker.Value)))
-            ColorSelection.ScaleType = Enum.ScaleType.Fit
-            ColorSelection.AnchorPoint = Vector2.new(0.5, 0.5)
-            ColorSelection.BackgroundTransparency = 1
-            ColorSelection.Image = "http://www.roblox.com/asset/?id=4805639000"
+            local ColorpickerFrame = Instance.new("Frame")
+            ColorpickerFrame.Size = UDim2.new(1, -20, 0, 35)
+            ColorpickerFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+            ColorpickerFrame.Parent = TabContent
+            ApplyCornerRadius(ColorpickerFrame, 6)
 
-            local HueSelection = Instance.new("ImageLabel")
-            HueSelection.Size = UDim2.new(0, 18, 0, 18)
-            HueSelection.Position = UDim2.new(0.5, 0, 1 - select(1, Color3.toHSV(Colorpicker.Value)))
-            HueSelection.ScaleType = Enum.ScaleType.Fit
-            HueSelection.AnchorPoint = Vector2.new(0.5, 0.5)
-            HueSelection.BackgroundTransparency = 1
-            HueSelection.Image = "http://www.roblox.com/asset/?id=4805639000"
+            -- Add label
+            local Label = Instance.new("TextLabel")
+            Label.Text = text
+            Label.Size = UDim2.new(1, -50, 1, 0)
+            Label.Position = UDim2.new(0, 10, 0, 0)
+            Label.BackgroundTransparency = 1
+            Label.TextColor3 = Color3.fromRGB(255, 255, 255)
+            Label.TextSize = 14
+            Label.Font = Enum.Font.Gotham
+            Label.TextXAlignment = Enum.TextXAlignment.Left
+            Label.Parent = ColorpickerFrame
 
-            -- Create color picker UI
-            local ColorFrame = Instance.new("Frame")
-            ColorFrame.Size = UDim2.new(1, -25, 1, 0)
-            ColorFrame.Visible = false
-            ColorFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-            ApplyCornerRadius(ColorFrame, 5)
-            
-            local ColorImage = Instance.new("ImageLabel")
-            ColorImage.Size = UDim2.new(1, 0, 1, 0)
-            ColorImage.Image = "rbxassetid://4155801252"
-            ColorImage.BackgroundTransparency = 1
-            ColorImage.Parent = ColorFrame
-            
-            ColorSelection.Parent = ColorFrame
+            -- Add color display/button
+            local ColorButton = Instance.new("TextButton")
+            ColorButton.Size = UDim2.new(0, 30, 0, 20)
+            ColorButton.Position = UDim2.new(1, -40, 0.5, -10)
+            ColorButton.BackgroundColor3 = default or Color3.fromRGB(255, 0, 0)
+            ColorButton.Text = ""
+            ColorButton.Parent = ColorpickerFrame
+            ApplyCornerRadius(ColorButton, 4)
 
-            -- Create hue selector
-            local HueFrame = Instance.new("Frame")
-            HueFrame.Size = UDim2.new(0, 20, 1, 0)
-            HueFrame.Position = UDim2.new(1, -20, 0, 0)
-            HueFrame.Visible = false
-            ApplyCornerRadius(HueFrame, 5)
+            -- Create color picker popup
+            local ColorPickerPopup = Instance.new("Frame")
+            ColorPickerPopup.Size = UDim2.new(0, 200, 0, 200)
+            ColorPickerPopup.Position = UDim2.new(1, 10, 0, 0)
+            ColorPickerPopup.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+            ColorPickerPopup.Visible = false
+            ColorPickerPopup.Parent = ColorpickerFrame
+            ApplyCornerRadius(ColorPickerPopup, 6)
 
-            local HueGradient = Instance.new("UIGradient")
-            HueGradient.Rotation = 270
-            HueGradient.Color = ColorSequence.new{
-                ColorSequenceKeypoint.new(0.00, Color3.fromRGB(255, 0, 4)),
-                ColorSequenceKeypoint.new(0.20, Color3.fromRGB(234, 255, 0)),
-                ColorSequenceKeypoint.new(0.40, Color3.fromRGB(21, 255, 0)),
-                ColorSequenceKeypoint.new(0.60, Color3.fromRGB(0, 255, 255)),
-                ColorSequenceKeypoint.new(0.80, Color3.fromRGB(0, 17, 255)),
-                ColorSequenceKeypoint.new(0.90, Color3.fromRGB(255, 0, 251)),
-                ColorSequenceKeypoint.new(1.00, Color3.fromRGB(255, 0, 4))
-            }
-            HueGradient.Parent = HueFrame
-            HueSelection.Parent = HueFrame
+            -- Add color wheel
+            local ColorWheel = Instance.new("ImageButton")
+            ColorWheel.Size = UDim2.new(0, 150, 0, 150)
+            ColorWheel.Position = UDim2.new(0.5, -75, 0, 10)
+            ColorWheel.Image = "rbxassetid://4155801252"
+            ColorWheel.BackgroundTransparency = 1
+            ColorWheel.Parent = ColorPickerPopup
 
-            -- Create main container
-            local Container = Instance.new("Frame")
-            Container.Size = UDim2.new(1, 0, 0, 148)
-            Container.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-            Container.ClipsDescendants = true
-            Container.Parent = TabContent
-            ApplyCornerRadius(Container, 6)
+            -- Add brightness slider
+            local BrightnessSlider = Instance.new("Frame")
+            BrightnessSlider.Size = UDim2.new(0, 150, 0, 20)
+            BrightnessSlider.Position = UDim2.new(0.5, -75, 1, -30)
+            BrightnessSlider.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            BrightnessSlider.Parent = ColorPickerPopup
+            ApplyCornerRadius(BrightnessSlider, 4)
 
-            -- Add title and display
-            local Title = Instance.new("TextLabel")
-            Title.Text = text
-            Title.Size = UDim2.new(1, -60, 0, 35)
-            Title.Position = UDim2.new(0, 10, 0, 0)
-            Title.BackgroundTransparency = 1
-            Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-            Title.TextSize = 14
-            Title.Font = Enum.Font.Gotham
-            Title.TextXAlignment = Enum.TextXAlignment.Left
-            Title.Parent = Container
+            local BrightnessGradient = Instance.new("UIGradient")
+            BrightnessGradient.Color = ColorSequence.new({
+                ColorSequenceKeypoint.new(0, Color3.new(0, 0, 0)),
+                ColorSequenceKeypoint.new(1, Color3.new(1, 1, 1))
+            })
+            BrightnessGradient.Parent = BrightnessSlider
 
-            local ColorDisplay = Instance.new("Frame")
-            ColorDisplay.Size = UDim2.new(0, 30, 0, 30)
-            ColorDisplay.Position = UDim2.new(1, -40, 0, 3)
-            ColorDisplay.BackgroundColor3 = Colorpicker.Value
-            ColorDisplay.Parent = Container
-            ApplyCornerRadius(ColorDisplay, 4)
-
-            -- Add color picker components
-            ColorFrame.Position = UDim2.new(0, 10, 0, 40)
-            ColorFrame.Parent = Container
-            HueFrame.Position = UDim2.new(1, -30, 0, 40)
-            HueFrame.Parent = Container
-
-            -- Variables for color picking
-            local ColorH, ColorS, ColorV = 1, 1, 1
-            local ColorInput, HueInput
-
-            -- Update function
-            local function UpdateColorPicker()
-                ColorDisplay.BackgroundColor3 = Color3.fromHSV(ColorH, ColorS, ColorV)
-                ColorFrame.BackgroundColor3 = Color3.fromHSV(ColorH, 1, 1)
-                callback(ColorDisplay.BackgroundColor3)
+            local function updateColor(color)
+                ColorButton.BackgroundColor3 = color
+                callback(color)
             end
 
-            -- ... rest of the input handling code from Orion ...
-            -- Add the same input handling for Color and Hue frames as in Orion
+            -- Toggle popup
+            ColorButton.MouseButton1Click:Connect(function()
+                ColorPickerPopup.Visible = not ColorPickerPopup.Visible
+            end)
 
-            return Container
+            -- Color wheel input
+            ColorWheel.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    local connection
+                    connection = UserInputService.InputChanged:Connect(function(input)
+                        if input.UserInputType == Enum.UserInputType.MouseMovement then
+                            local wheelPosition = ColorWheel.AbsolutePosition
+                            local wheelSize = ColorWheel.AbsoluteSize
+                            
+                            local mousePosition = Vector2.new(
+                                input.Position.X - wheelPosition.X,
+                                input.Position.Y - wheelPosition.Y
+                            )
+                            
+                            local centerPoint = wheelSize / 2
+                            local angle = math.atan2(mousePosition.Y - centerPoint.Y, mousePosition.X - centerPoint.X)
+                            local radius = math.min((mousePosition - centerPoint).Magnitude, centerPoint.X)
+                            
+                            local hue = (angle + math.pi) / (2 * math.pi)
+                            local saturation = radius / centerPoint.X
+                            
+                            updateColor(Color3.fromHSV(hue, saturation, 1))
+                        end
+                    end)
+                    
+                    UserInputService.InputEnded:Connect(function(input)
+                        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                            if connection then
+                                connection:Disconnect()
+                            end
+                        end
+                    end)
+                end
+            end)
+
+            -- Brightness slider input
+            BrightnessSlider.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    local connection
+                    connection = UserInputService.InputChanged:Connect(function(input)
+                        if input.UserInputType == Enum.UserInputType.MouseMovement then
+                            local sliderPosition = BrightnessSlider.AbsolutePosition
+                            local sliderSize = BrightnessSlider.AbsoluteSize
+                            
+                            local value = math.clamp(
+                                (input.Position.X - sliderPosition.X) / sliderSize.X,
+                                0, 1
+                            )
+                            
+                            local currentColor = ColorButton.BackgroundColor3
+                            local h, s, _ = Color3.toHSV(currentColor)
+                            updateColor(Color3.fromHSV(h, s, value))
+                        end
+                    end)
+                    
+                    UserInputService.InputEnded:Connect(function(input)
+                        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                            if connection then
+                                connection:Disconnect()
+                            end
+                        end
+                    end)
+                end
+            end)
+
+            return ColorpickerFrame
         end
         
         table.insert(tabs, Tab)
