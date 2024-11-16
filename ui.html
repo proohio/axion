@@ -1,8 +1,22 @@
 local UILib = {}
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
+local CoreGui = game:GetService("CoreGui")
 
--- Create main window
+-- Utility functions for UI styling
+local function ApplyCornerRadius(instance, radius)
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, radius)
+    corner.Parent = instance
+end
+
+local function ApplyStroke(instance, color, thickness)
+    local stroke = Instance.new("UIStroke")
+    stroke.Color = color
+    stroke.Thickness = thickness
+    stroke.Parent = instance
+end
+
 function UILib.CreateWindow(title)
     local Window = {}
     
@@ -11,53 +25,77 @@ function UILib.CreateWindow(title)
     local MainFrame = Instance.new("Frame")
     local TopBar = Instance.new("Frame")
     local Title = Instance.new("TextLabel")
-    local Container = Instance.new("ScrollingFrame")
-    local UIListLayout = Instance.new("UIListLayout")
+    local CloseButton = Instance.new("ImageButton")
+    local TabContainer = Instance.new("Frame")
+    local ContentContainer = Instance.new("Frame")
     
     -- Set up GUI hierarchy
-    ScreenGui.Parent = game.CoreGui
-    MainFrame.Parent = ScreenGui
-    TopBar.Parent = MainFrame
-    Title.Parent = TopBar
-    Container.Parent = MainFrame
-    UIListLayout.Parent = Container
+    ScreenGui.Name = "AxionUI"
+    ScreenGui.Parent = CoreGui
     
-    -- Style main frame
-    MainFrame.Size = UDim2.new(0, 400, 0, 300)
-    MainFrame.Position = UDim2.new(0.5, -200, 0.5, -150)
-    MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    MainFrame.Name = "MainFrame"
+    MainFrame.Parent = ScreenGui
+    MainFrame.Size = UDim2.new(0, 450, 0, 350)
+    MainFrame.Position = UDim2.new(0.5, -225, 0.5, -175)
+    MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
     MainFrame.BorderSizePixel = 0
+    ApplyCornerRadius(MainFrame, 8)
+    
+    -- Add shadow
+    local Shadow = Instance.new("ImageLabel")
+    Shadow.Name = "Shadow"
+    Shadow.BackgroundTransparency = 1
+    Shadow.Position = UDim2.new(0, -15, 0, -15)
+    Shadow.Size = UDim2.new(1, 30, 1, 30)
+    Shadow.Image = "rbxassetid://5554236805"
+    Shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
+    Shadow.ScaleType = Enum.ScaleType.Slice
+    Shadow.SliceCenter = Rect.new(23, 23, 277, 277)
+    Shadow.Parent = MainFrame
     
     -- Style top bar
-    TopBar.Size = UDim2.new(1, 0, 0, 30)
-    TopBar.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    TopBar.Name = "TopBar"
+    TopBar.Parent = MainFrame
+    TopBar.Size = UDim2.new(1, 0, 0, 35)
+    TopBar.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
     TopBar.BorderSizePixel = 0
+    ApplyCornerRadius(TopBar, 8)
     
-    -- Style title
-    Title.Size = UDim2.new(1, -10, 1, 0)
-    Title.Position = UDim2.new(0, 10, 0, 0)
+    Title.Name = "Title"
+    Title.Parent = TopBar
+    Title.Size = UDim2.new(1, -40, 1, 0)
+    Title.Position = UDim2.new(0, 15, 0, 0)
     Title.BackgroundTransparency = 1
     Title.Text = title
     Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Title.TextSize = 14
+    Title.TextSize = 16
     Title.Font = Enum.Font.GothamBold
     Title.TextXAlignment = Enum.TextXAlignment.Left
-    
-    -- Style container
-    Container.Size = UDim2.new(1, -20, 1, -40)
-    Container.Position = UDim2.new(0, 10, 0, 35)
-    Container.BackgroundTransparency = 1
-    Container.ScrollBarThickness = 4
-    
-    -- Set up UI layout
-    UIListLayout.Padding = UDim.new(0, 5)
-    
-    -- Make window draggable
-    local dragging
+
+    -- Add tabs container
+    TabContainer.Name = "TabContainer"
+    TabContainer.Parent = MainFrame
+    TabContainer.Size = UDim2.new(0, 120, 1, -45)
+    TabContainer.Position = UDim2.new(0, 10, 0, 40)
+    TabContainer.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    TabContainer.BorderSizePixel = 0
+    ApplyCornerRadius(TabContainer, 6)
+
+    -- Add content container
+    ContentContainer.Name = "ContentContainer"
+    ContentContainer.Parent = MainFrame
+    ContentContainer.Size = UDim2.new(1, -140, 1, -45)
+    ContentContainer.Position = UDim2.new(0, 130, 0, 40)
+    ContentContainer.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    ContentContainer.BorderSizePixel = 0
+    ApplyCornerRadius(ContentContainer, 6)
+
+    -- Make window draggable with smooth dragging
+    local dragging = false
     local dragInput
     local dragStart
     local startPos
-    
+
     TopBar.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging = true
@@ -65,81 +103,110 @@ function UILib.CreateWindow(title)
             startPos = MainFrame.Position
         end
     end)
-    
+
     TopBar.InputEnded:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging = false
         end
     end)
-    
+
     UserInputService.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement then
-            dragInput = input
+        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+            local delta = input.Position - dragStart
+            TweenService:Create(MainFrame, TweenInfo.new(0.1), {
+                Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+            }):Play()
         end
     end)
-    
-    game:GetService("RunService").RenderStepped:Connect(function()
-        if dragging and dragInput then
-            local delta = dragInput.Position - dragStart
-            MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+
+    -- Tab system
+    local tabs = {}
+    local currentTab = nil
+
+    function Window:CreateTab(name)
+        local Tab = {}
+        
+        local TabButton = Instance.new("TextButton")
+        local TabContent = Instance.new("ScrollingFrame")
+        local UIListLayout = Instance.new("UIListLayout")
+        
+        -- Style tab button
+        TabButton.Name = name.."Tab"
+        TabButton.Parent = TabContainer
+        TabButton.Size = UDim2.new(1, -10, 0, 35)
+        TabButton.Position = UDim2.new(0, 5, 0, #tabs * 40 + 5)
+        TabButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+        TabButton.Text = name
+        TabButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+        TabButton.TextSize = 14
+        TabButton.Font = Enum.Font.GothamSemibold
+        ApplyCornerRadius(TabButton, 6)
+        
+        -- Style tab content
+        TabContent.Name = name.."Content"
+        TabContent.Parent = ContentContainer
+        TabContent.Size = UDim2.new(1, -20, 1, -20)
+        TabContent.Position = UDim2.new(0, 10, 0, 10)
+        TabContent.BackgroundTransparency = 1
+        TabContent.ScrollBarThickness = 2
+        TabContent.Visible = false
+        
+        UIListLayout.Parent = TabContent
+        UIListLayout.Padding = UDim.new(0, 8)
+        UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+        
+        -- Tab button click handler
+        TabButton.MouseButton1Click:Connect(function()
+            if currentTab then
+                currentTab.Content.Visible = false
+                TweenService:Create(currentTab.Button, TweenInfo.new(0.2), {
+                    BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+                }):Play()
+            end
+            
+            currentTab = {Button = TabButton, Content = TabContent}
+            TabContent.Visible = true
+            TweenService:Create(TabButton, TweenInfo.new(0.2), {
+                BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+            }):Play()
+        end)
+        
+        -- Select first tab by default
+        if #tabs == 0 then
+            TabButton.MouseButton1Click:Fire()
         end
-    end)
-    
-    -- Add methods to create UI elements
-    function Window:CreateButton(text, callback)
-        local Button = Instance.new("TextButton")
-        Button.Parent = Container
-        Button.Size = UDim2.new(1, 0, 0, 30)
-        Button.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-        Button.BorderSizePixel = 0
-        Button.Text = text
-        Button.TextColor3 = Color3.fromRGB(255, 255, 255)
-        Button.TextSize = 14
-        Button.Font = Enum.Font.Gotham
         
-        Button.MouseButton1Click:Connect(callback)
+        table.insert(tabs, Tab)
         
-        -- Hover effect
-        Button.MouseEnter:Connect(function()
-            TweenService:Create(Button, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
-        end)
+        -- Add elements to tab
+        function Tab:AddButton(text, callback)
+            local Button = Instance.new("TextButton")
+            Button.Size = UDim2.new(1, 0, 0, 35)
+            Button.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+            Button.Text = text
+            Button.TextColor3 = Color3.fromRGB(255, 255, 255)
+            Button.TextSize = 14
+            Button.Font = Enum.Font.Gotham
+            Button.Parent = TabContent
+            ApplyCornerRadius(Button, 6)
+            
+            Button.MouseButton1Click:Connect(callback)
+            
+            -- Hover effect
+            Button.MouseEnter:Connect(function()
+                TweenService:Create(Button, TweenInfo.new(0.2), {
+                    BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+                }):Play()
+            end)
+            
+            Button.MouseLeave:Connect(function()
+                TweenService:Create(Button, TweenInfo.new(0.2), {
+                    BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+                }):Play()
+            end)
+        end
         
-        Button.MouseLeave:Connect(function()
-            TweenService:Create(Button, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(50, 50, 50)}):Play()
-        end)
-    end
-    
-    function Window:CreateToggle(text, callback)
-        local Toggle = Instance.new("Frame")
-        local Button = Instance.new("TextButton")
-        local ToggleIndicator = Instance.new("Frame")
-        local enabled = false
-        
-        Toggle.Parent = Container
-        Toggle.Size = UDim2.new(1, 0, 0, 30)
-        Toggle.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-        Toggle.BorderSizePixel = 0
-        
-        Button.Parent = Toggle
-        Button.Size = UDim2.new(1, 0, 1, 0)
-        Button.BackgroundTransparency = 1
-        Button.Text = text
-        Button.TextColor3 = Color3.fromRGB(255, 255, 255)
-        Button.TextSize = 14
-        Button.Font = Enum.Font.Gotham
-        
-        ToggleIndicator.Parent = Toggle
-        ToggleIndicator.Size = UDim2.new(0, 20, 0, 20)
-        ToggleIndicator.Position = UDim2.new(1, -25, 0.5, -10)
-        ToggleIndicator.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-        ToggleIndicator.BorderSizePixel = 0
-        
-        Button.MouseButton1Click:Connect(function()
-            enabled = not enabled
-            local color = enabled and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
-            TweenService:Create(ToggleIndicator, TweenInfo.new(0.2), {BackgroundColor3 = color}):Play()
-            callback(enabled)
-        end)
+        return Tab
     end
     
     return Window
