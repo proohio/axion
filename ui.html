@@ -712,12 +712,21 @@ function UILib.CreateWindow(title)
             local ColorWheel = Instance.new("ImageButton")
             ColorWheel.Size = UDim2.new(0, 150, 0, 150)
             ColorWheel.Position = UDim2.new(0.5, -75, 0, 10)
-            ColorWheel.Image = "rbxassetid://4155801252"
+            ColorWheel.Image = "rbxassetid://6020299385"
             ColorWheel.BackgroundTransparency = 1
             ColorWheel.ZIndex = 101
             ColorWheel.Parent = ColorPickerPopup
 
-            -- Add brightness slider
+            -- Add saturation/value overlay
+            local SaturationValue = Instance.new("ImageLabel")
+            SaturationValue.Size = UDim2.new(1, 0, 1, 0)
+            SaturationValue.Position = UDim2.new(0, 0, 0, 0)
+            SaturationValue.Image = "rbxassetid://6020299385"
+            SaturationValue.BackgroundTransparency = 1
+            SaturationValue.ZIndex = 102
+            SaturationValue.Parent = ColorWheel
+
+            -- Add brightness slider with proper gradient
             local BrightnessSlider = Instance.new("TextButton")
             BrightnessSlider.Size = UDim2.new(0, 150, 0, 20)
             BrightnessSlider.Position = UDim2.new(0.5, -75, 1, -30)
@@ -729,8 +738,9 @@ function UILib.CreateWindow(title)
 
             local BrightnessGradient = Instance.new("UIGradient")
             BrightnessGradient.Color = ColorSequence.new({
-                ColorSequenceKeypoint.new(0, Color3.new(0, 0, 0)),
-                ColorSequenceKeypoint.new(1, Color3.new(1, 1, 1))
+                ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 0, 0)),
+                ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 0, 0)),
+                ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 255, 255))
             })
             BrightnessGradient.Parent = BrightnessSlider
 
@@ -763,10 +773,19 @@ function UILib.CreateWindow(title)
                 end
             end)
 
-            -- Color selection logic
+            -- Update color selection logic
             local function updateColor(hue, sat, val)
                 local color = Color3.fromHSV(hue, sat, val)
                 ColorButton.BackgroundColor3 = color
+                
+                -- Update brightness slider gradient
+                local baseColor = Color3.fromHSV(hue, sat, 1)
+                BrightnessGradient.Color = ColorSequence.new({
+                    ColorSequenceKeypoint.new(0, Color3.new(0, 0, 0)),
+                    ColorSequenceKeypoint.new(0.5, baseColor),
+                    ColorSequenceKeypoint.new(1, Color3.new(1, 1, 1))
+                })
+                
                 callback(color)
             end
 
