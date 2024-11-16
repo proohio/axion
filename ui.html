@@ -382,8 +382,11 @@ function UILib.CreateWindow(title)
         
         -- Add elements to tab
         function Tab:AddButton(text, callback)
+            -- Convert text to string if it's not already
+            local buttonText = tostring(text)
+            
             local Button = Instance.new("TextButton")
-            Button.Name = text.."Button"
+            Button.Name = buttonText.."Button"
             Button.Parent = TabContent
             Button.Size = UDim2.new(1, -20, 0, 35)
             Button.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
@@ -408,16 +411,17 @@ function UILib.CreateWindow(title)
         end
         
         function Tab:AddToggle(text, default, callback)
-            local Toggle = Instance.new("Frame")
-            local Button = Instance.new("TextButton")
-            local ToggleIndicator = Instance.new("Frame")
-            local enabled = default or false
+            -- Convert text to string if it's not already
+            local toggleText = tostring(text)
             
+            local Toggle = Instance.new("Frame")
+            Toggle.Name = toggleText.."Toggle"
             Toggle.Size = UDim2.new(1, -20, 0, 35)
             Toggle.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
             Toggle.Parent = TabContent
             ApplyCornerRadius(Toggle, 6)
             
+            local Button = Instance.new("TextButton")
             Button.Size = UDim2.new(1, 0, 1, 0)
             Button.BackgroundTransparency = 1
             Button.Text = text
@@ -426,14 +430,15 @@ function UILib.CreateWindow(title)
             Button.Font = Enum.Font.Gotham
             Button.Parent = Toggle
             
+            local ToggleIndicator = Instance.new("Frame")
             ToggleIndicator.Size = UDim2.new(0, 20, 0, 20)
             ToggleIndicator.Position = UDim2.new(1, -30, 0.5, -10)
-            ToggleIndicator.BackgroundColor3 = enabled and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
+            ToggleIndicator.BackgroundColor3 = default or false and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
             ToggleIndicator.Parent = Toggle
             ApplyCornerRadius(ToggleIndicator, 4)
             
             Button.MouseButton1Click:Connect(function()
-                enabled = not enabled
+                local enabled = not default
                 TweenService:Create(ToggleIndicator, TweenInfo.new(0.2), {
                     BackgroundColor3 = enabled and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
                 }):Play()
@@ -827,8 +832,11 @@ function UILib.CreateWindow(title)
         end
         
         function Tab:AddLabel(text)
+            -- Convert text to string if it's not already
+            local labelText = tostring(text)
+            
             local Label = Instance.new("TextLabel")
-            Label.Name = text.."Label"
+            Label.Name = labelText.."Label"
             Label.Parent = TabContent
             Label.Size = UDim2.new(1, -20, 0, 35)
             Label.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
