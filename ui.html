@@ -370,6 +370,13 @@ function UILib.CreateWindow(title)
                 return Keybind
             end
             
+            -- Add the missing colorpicker clone
+            function Section:AddColorpicker(text, default, callback)
+                local Colorpicker = Tab:AddColorpicker(text, default, callback)
+                Colorpicker.Parent = SectionContent
+                return Colorpicker
+            end
+            
             return Section
         end
         
