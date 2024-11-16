@@ -208,9 +208,15 @@ function UILib.CreateWindow(title)
     local minimized = false
     MinimizeButton.MouseButton1Click:Connect(function()
         minimized = not minimized
+        
+        -- Create tweens for both size and content visibility
         TweenService:Create(MainFrame, TweenInfo.new(0.5), {
             Size = minimized and UDim2.new(0, 450, 0, 35) or UDim2.new(0, 450, 0, 350)
         }):Play()
+        
+        -- Hide/Show content containers
+        TabContainer.Visible = not minimized
+        ContentContainer.Visible = not minimized
     end)
     
     CloseButton.MouseButton1Click:Connect(function()
