@@ -657,6 +657,146 @@ function UILib.CreateWindow(title)
             return Keybind
         end
         
+        function Tab:AddColorpicker(text, default, callback)
+            local Colorpicker = Instance.new("Frame")
+            local Title = Instance.new("TextLabel")
+            local ColorButton = Instance.new("TextButton")
+            local ColorDisplay = Instance.new("Frame")
+            local PickerFrame = Instance.new("Frame")
+            local ColorArea = Instance.new("ImageButton")
+            local ColorSlider = Instance.new("ImageButton")
+            local ColorCursor = Instance.new("Frame")
+            local SliderCursor = Instance.new("Frame")
+            
+            local defaultColor = default or Color3.fromRGB(255, 0, 0)
+            local selectedColor = defaultColor
+            local hue, sat, val = Color3.toHSV(defaultColor)
+            local picking = false
+            local slidingHue = false
+            
+            Colorpicker.Size = UDim2.new(1, -20, 0, 35)
+            Colorpicker.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+            Colorpicker.Parent = TabContent
+            ApplyCornerRadius(Colorpicker, 6)
+            
+            Title.Text = text
+            Title.Size = UDim2.new(1, -60, 1, 0)
+            Title.Position = UDim2.new(0, 10, 0, 0)
+            Title.BackgroundTransparency = 1
+            Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+            Title.TextSize = 14
+            Title.Font = Enum.Font.Gotham
+            Title.TextXAlignment = Enum.TextXAlignment.Left
+            Title.Parent = Colorpicker
+            
+            ColorDisplay.Size = UDim2.new(0, 30, 0, 25)
+            ColorDisplay.Position = UDim2.new(1, -40, 0.5, -12)
+            ColorDisplay.BackgroundColor3 = defaultColor
+            ColorDisplay.Parent = Colorpicker
+            ApplyCornerRadius(ColorDisplay, 4)
+            
+            PickerFrame.Size = UDim2.new(0, 200, 0, 220)
+            PickerFrame.Position = UDim2.new(1, 10, 0, 0)
+            PickerFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+            PickerFrame.Visible = false
+            PickerFrame.ZIndex = 100
+            PickerFrame.Parent = Colorpicker
+            ApplyCornerRadius(PickerFrame, 6)
+            
+            ColorArea.Name = "ColorArea"
+            ColorArea.Size = UDim2.new(1, -20, 0, 150)
+            ColorArea.Position = UDim2.new(0, 10, 0, 10)
+            ColorArea.Image = "rbxassetid://4155801252"
+            ColorArea.ZIndex = 101
+            ColorArea.Parent = PickerFrame
+            ApplyCornerRadius(ColorArea, 4)
+            
+            ColorSlider.Name = "ColorSlider"
+            ColorSlider.Size = UDim2.new(1, -20, 0, 20)
+            ColorSlider.Position = UDim2.new(0, 10, 0, 170)
+            ColorSlider.Image = "rbxassetid://3641079629"
+            ColorSlider.ZIndex = 101
+            ColorSlider.Parent = PickerFrame
+            ApplyCornerRadius(ColorSlider, 4)
+            
+            ColorCursor.Size = UDim2.new(0, 10, 0, 10)
+            ColorCursor.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            ColorCursor.ZIndex = 102
+            ColorCursor.Parent = ColorArea
+            ApplyCornerRadius(ColorCursor, 1000)
+            
+            SliderCursor.Size = UDim2.new(0, 5, 1, 0)
+            SliderCursor.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            SliderCursor.ZIndex = 102
+            SliderCursor.Parent = ColorSlider
+            ApplyCornerRadius(SliderCursor, 1000)
+            
+            local function updateColor()
+                local color = Color3.fromHSV(hue, sat, val)
+                ColorDisplay.BackgroundColor3 = color
+                callback(color)
+            end
+            
+            ColorDisplay.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    PickerFrame.Visible = not PickerFrame.Visible
+                end
+            end)
+            
+            ColorArea.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    picking = true
+                end
+            end)
+            
+            ColorArea.InputEnded:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    picking = false
+                end
+            end)
+            
+            ColorSlider.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    slidingHue = true
+                end
+            end)
+            
+            ColorSlider.InputEnded:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    slidingHue = false
+                end
+            end)
+            
+            UserInputService.InputChanged:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseMovement then
+                    if picking then
+                        local colorX = math.clamp((input.Position.X - ColorArea.AbsolutePosition.X) / ColorArea.AbsoluteSize.X, 0, 1)
+                        local colorY = math.clamp((input.Position.Y - ColorArea.AbsolutePosition.Y) / ColorArea.AbsoluteSize.Y, 0, 1)
+                        
+                        sat = colorX
+                        val = 1 - colorY
+                        
+                        ColorCursor.Position = UDim2.new(colorX, -5, colorY, -5)
+                        updateColor()
+                    elseif slidingHue then
+                        hue = math.clamp((input.Position.X - ColorSlider.AbsolutePosition.X) / ColorSlider.AbsoluteSize.X, 0, 1)
+                        SliderCursor.Position = UDim2.new(hue, -2, 0, 0)
+                        ColorArea.ImageColor3 = Color3.fromHSV(hue, 1, 1)
+                        updateColor()
+                    end
+                end
+            end)
+            
+            -- Initial setup
+            local h, s, v = Color3.toHSV(defaultColor)
+            hue, sat, val = h, s, v
+            ColorArea.ImageColor3 = Color3.fromHSV(hue, 1, 1)
+            ColorCursor.Position = UDim2.new(sat, -5, 1 - val, -5)
+            SliderCursor.Position = UDim2.new(hue, -2, 0, 0)
+            
+            return Colorpicker
+        end
+        
         table.insert(tabs, Tab)
         return Tab
     end
