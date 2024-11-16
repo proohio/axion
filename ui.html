@@ -184,15 +184,15 @@ function UILib.CreateWindow(title)
             }):Play()
         end)
         
-        -- Select first tab by default
+        -- If this is the first tab, manually set it as current
         if #tabs == 0 then
-            TabButton.MouseButton1Click:Fire()
+            currentTab = {Button = TabButton, Content = TabContent}
+            TabContent.Visible = true
+            TabButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
         end
         
         -- Add elements to tab
         function Tab:AddButton(text, callback)
-            print("Creating button:", text) -- Debug print
-            
             local Button = Instance.new("TextButton")
             Button.Name = text.."Button"
             Button.Parent = TabContent
@@ -202,28 +202,17 @@ function UILib.CreateWindow(title)
             Button.TextColor3 = Color3.fromRGB(255, 255, 255)
             Button.TextSize = 14
             Button.Font = Enum.Font.Gotham
-            Button.Position = UDim2.new(0, 10, 0, 0) -- Add explicit position
-            Button.Visible = true -- Make sure it's visible
+            Button.BorderSizePixel = 0
             ApplyCornerRadius(Button, 6)
             
-            print("Button created:", Button:GetFullName()) -- Debug print
-            
-            -- Add hover effects
-            Button.MouseEnter:Connect(function()
-                TweenService:Create(Button, TweenInfo.new(0.2), {
-                    BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-                }):Play()
+            -- Simple click handler without Tween
+            Button.MouseButton1Down:Connect(function()
+                Button.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+                task.spawn(callback)
             end)
             
-            Button.MouseLeave:Connect(function()
-                TweenService:Create(Button, TweenInfo.new(0.2), {
-                    BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-                }):Play()
-            end)
-            
-            Button.MouseButton1Click:Connect(function()
-                print("Button clicked:", text) -- Debug print
-                callback()
+            Button.MouseButton1Up:Connect(function()
+                Button.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
             end)
             
             return Button
