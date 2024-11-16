@@ -436,7 +436,7 @@ function UILib.CreateWindow(title)
             ApplyCornerRadius(Dropdown, 6)
             
             Title.Text = text
-            Title.Size = UDim2.new(1, -10, 1, 0)
+            Title.Size = UDim2.new(1, -40, 1, 0)
             Title.Position = UDim2.new(0, 10, 0, 0)
             Title.BackgroundTransparency = 1
             Title.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -454,28 +454,36 @@ function UILib.CreateWindow(title)
             DropButton.Font = Enum.Font.Gotham
             DropButton.Parent = Dropdown
             
-            OptionsList.Size = UDim2.new(1, 0, 0, #options * 25)
+            OptionsList.Size = UDim2.new(1, 0, 0, 0)
             OptionsList.Position = UDim2.new(0, 0, 1, 5)
             OptionsList.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
             OptionsList.Visible = false
+            OptionsList.ClipsDescendants = true
             OptionsList.Parent = Dropdown
             ApplyCornerRadius(OptionsList, 6)
             
             UIListLayout.Parent = OptionsList
             UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+            UIListLayout.Padding = UDim.new(0, 5)
             
             for i, option in ipairs(options) do
                 local OptionButton = Instance.new("TextButton")
-                OptionButton.Size = UDim2.new(1, 0, 0, 25)
-                OptionButton.BackgroundTransparency = 1
+                OptionButton.Size = UDim2.new(1, -10, 0, 25)
+                OptionButton.Position = UDim2.new(0, 5, 0, 5)
+                OptionButton.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
                 OptionButton.Text = option
                 OptionButton.TextColor3 = Color3.fromRGB(255, 255, 255)
                 OptionButton.TextSize = 14
                 OptionButton.Font = Enum.Font.Gotham
                 OptionButton.Parent = OptionsList
+                ApplyCornerRadius(OptionButton, 4)
                 
                 OptionButton.MouseButton1Click:Connect(function()
                     Title.Text = text .. ": " .. option
+                    TweenService:Create(OptionsList, TweenInfo.new(0.2), {
+                        Size = UDim2.new(1, 0, 0, 0)
+                    }):Play()
+                    task.wait(0.2)
                     OptionsList.Visible = false
                     isOpen = false
                     callback(option)
@@ -484,10 +492,83 @@ function UILib.CreateWindow(title)
             
             DropButton.MouseButton1Click:Connect(function()
                 isOpen = not isOpen
-                OptionsList.Visible = isOpen
+                if isOpen then
+                    OptionsList.Visible = true
+                    TweenService:Create(OptionsList, TweenInfo.new(0.2), {
+                        Size = UDim2.new(1, 0, 0, #options * 30 + 10)
+                    }):Play()
+                    TweenService:Create(DropButton, TweenInfo.new(0.2), {
+                        Rotation = 180
+                    }):Play()
+                else
+                    TweenService:Create(OptionsList, TweenInfo.new(0.2), {
+                        Size = UDim2.new(1, 0, 0, 0)
+                    }):Play()
+                    TweenService:Create(DropButton, TweenInfo.new(0.2), {
+                        Rotation = 0
+                    }):Play()
+                    task.wait(0.2)
+                    OptionsList.Visible = false
+                end
             end)
             
             return Dropdown
+        end
+        
+        function Tab:AddBind(text, defaultKey, callback)
+            local Keybind = Instance.new("Frame")
+            local Title = Instance.new("TextLabel")
+            local BindButton = Instance.new("TextButton")
+            local listening = false
+            local currentKey = defaultKey
+            
+            Keybind.Size = UDim2.new(1, -20, 0, 35)
+            Keybind.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+            Keybind.Parent = TabContent
+            ApplyCornerRadius(Keybind, 6)
+            
+            Title.Text = text
+            Title.Size = UDim2.new(1, -90, 1, 0)
+            Title.Position = UDim2.new(0, 10, 0, 0)
+            Title.BackgroundTransparency = 1
+            Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+            Title.TextSize = 14
+            Title.Font = Enum.Font.Gotham
+            Title.TextXAlignment = Enum.TextXAlignment.Left
+            Title.Parent = Keybind
+            
+            BindButton.Size = UDim2.new(0, 70, 0, 25)
+            BindButton.Position = UDim2.new(1, -80, 0.5, -12)
+            BindButton.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+            BindButton.Text = defaultKey.Name
+            BindButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+            BindButton.TextSize = 12
+            BindButton.Font = Enum.Font.Gotham
+            BindButton.Parent = Keybind
+            ApplyCornerRadius(BindButton, 4)
+            
+            local function updateBind(input)
+                currentKey = input.KeyCode
+                BindButton.Text = input.KeyCode.Name
+                listening = false
+                BindButton.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+            end
+            
+            BindButton.MouseButton1Click:Connect(function()
+                listening = true
+                BindButton.Text = "..."
+                BindButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+            end)
+            
+            UserInputService.InputBegan:Connect(function(input)
+                if listening and input.UserInputType == Enum.UserInputType.Keyboard then
+                    updateBind(input)
+                elseif input.KeyCode == currentKey then
+                    callback()
+                end
+            end)
+            
+            return Keybind
         end
         
         table.insert(tabs, Tab)
