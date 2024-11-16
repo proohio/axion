@@ -18,19 +18,25 @@ local function ApplyStroke(instance, color, thickness)
     stroke.Parent = instance
 end
 
+-- Create a container for notifications
+local NotificationContainer = Instance.new("ScreenGui")
+NotificationContainer.Name = "AxionNotifications"
+NotificationContainer.Parent = CoreGui
+
 -- Notification system
 function UILib.Notify(title, description, duration)
     duration = duration or 5
     
+    -- Create notification frame
     local NotificationFrame = Instance.new("Frame")
-    local Title = Instance.new("TextLabel")
-    local Description = Instance.new("TextLabel")
-    
     NotificationFrame.Size = UDim2.new(0, 250, 0, 80)
-    NotificationFrame.Position = UDim2.new(1, -260, 1, -90)
+    NotificationFrame.Position = UDim2.new(1, 0, 1, -90) -- Start off screen
     NotificationFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    NotificationFrame.BorderSizePixel = 0
     ApplyCornerRadius(NotificationFrame, 6)
     
+    -- Add title
+    local Title = Instance.new("TextLabel")
     Title.Text = title
     Title.Size = UDim2.new(1, -20, 0, 25)
     Title.Position = UDim2.new(0, 10, 0, 5)
@@ -41,6 +47,8 @@ function UILib.Notify(title, description, duration)
     Title.BackgroundTransparency = 1
     Title.Parent = NotificationFrame
     
+    -- Add description
+    local Description = Instance.new("TextLabel")
     Description.Text = description
     Description.Size = UDim2.new(1, -20, 0, 40)
     Description.Position = UDim2.new(0, 10, 0, 30)
@@ -52,19 +60,25 @@ function UILib.Notify(title, description, duration)
     Description.BackgroundTransparency = 1
     Description.Parent = NotificationFrame
     
-    NotificationFrame.Parent = CoreGui
+    -- Parent to container
+    NotificationFrame.Parent = NotificationContainer
     
-    -- Animation
+    -- Slide in animation
     TweenService:Create(NotificationFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quart), {
         Position = UDim2.new(1, -260, 1, -90)
     }):Play()
     
+    -- Wait for duration then slide out
     task.delay(duration, function()
-        TweenService:Create(NotificationFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quart), {
+        local slideTween = TweenService:Create(NotificationFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quart), {
             Position = UDim2.new(1, 0, 1, -90)
-        }):Play()
-        task.wait(0.5)
-        NotificationFrame:Destroy()
+        })
+        
+        slideTween.Completed:Connect(function()
+            NotificationFrame:Destroy()
+        end)
+        
+        slideTween:Play()
     end)
 end
 
