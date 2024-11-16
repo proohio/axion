@@ -1,3 +1,5 @@
+
+
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
@@ -26,28 +28,15 @@ local OrionLib = {
 }
 
 --Feather Icons https://github.com/evoincorp/lucideblox/tree/master/src/modules/util - Created by 7kayoh
-local Icons = {
-	-- Default fallback icons in case loading fails
-	default = {
-		circle = "rbxassetid://7072718362",
-		square = "rbxassetid://7072719338",
-		triangle = "rbxassetid://7072720870"
-	}
-}
+local Icons = {}
 
 local Success, Response = pcall(function()
-	local iconData = game:HttpGet("https://raw.githubusercontent.com/evoincorp/lucideblox/master/src/modules/util/icons.json")
-	if iconData then
-		local decoded = game:GetService("HttpService"):JSONDecode(iconData)
-		if decoded and decoded.icons then
-			Icons = decoded.icons
-		end
-	end
+	Icons = HttpService:JSONDecode(game:HttpGetAsync("https://raw.githubusercontent.com/evoincorp/lucideblox/master/src/modules/util/icons.json")).icons
 end)
 
 if not Success then
-	warn("Axion UI - Using fallback icons. Error: " .. tostring(Response))
-end
+	warn("\nOrion Library - Failed to load Feather Icons. Error code: " .. Response .. "\n")
+end	
 
 local function GetIcon(IconName)
 	if Icons[IconName] ~= nil then
@@ -155,39 +144,9 @@ local function CreateElement(ElementName, ElementFunction)
 	end
 end
 
-local function MakeElement(elementType, text, size)
-    if elementType == "Circle" then
-        local element = Instance.new("Frame")
-        local uiCorner = Instance.new("UICorner")
-        uiCorner.CornerRadius = UDim.new(1, 0)  -- Makes it perfectly circular
-        uiCorner.Parent = element
-        return element
-    end
-    
-    local element = Instance.new(elementType)
-    
-    -- Add default properties
-    if elementType == "Frame" then
-        element.BackgroundColor3 = AxionTheme.Foreground
-        element.BorderSizePixel = 0
-    end
-    
-    if elementType == "TextButton" or elementType == "TextLabel" then
-        element.BackgroundTransparency = 1
-        element.TextColor3 = AxionTheme.TextColor
-        element.Font = Enum.Font.Gotham
-        element.TextSize = size or 14
-        element.Text = text or ""
-    end
-    
-    -- Add corner radius (except for Circle type)
-    if elementType ~= "Circle" then
-        local corner = Instance.new("UICorner")
-        corner.CornerRadius = UDim.new(0, 6)
-        corner.Parent = element
-    end
-    
-    return element
+local function MakeElement(ElementName, ...)
+	local NewElement = OrionLib.Elements[ElementName](...)
+	return NewElement
 end
 
 local function SetProps(Element, Props)
@@ -447,7 +406,7 @@ function OrionLib:MakeNotification(NotificationConfig)
 			Position = UDim2.new(1, -55, 0, 0),
 			BackgroundTransparency = 0,
 			AutomaticSize = Enum.AutomaticSize.Y
-		}, {
+		}), {
 			MakeElement("Stroke", Color3.fromRGB(93, 93, 93), 1.2),
 			MakeElement("Padding", 12, 12, 12, 12),
 			SetProps(MakeElement("Image", NotificationConfig.Image), {
@@ -620,7 +579,7 @@ function OrionLib:MakeWindow(WindowConfig)
 				Font = Enum.Font.GothamBold,
 				ClipsDescendants = true
 			}), "Text"),
-			AddThemeObject(SetProps(MakeElement("", 12), {
+			AddThemeObject(SetProps(MakeElement("Label", "", 12), {
 				Size = UDim2.new(1, -60, 0, 12),
 				Position = UDim2.new(0, 50, 1, -25),
 				Visible = not WindowConfig.HidePremium
@@ -872,7 +831,7 @@ function OrionLib:MakeWindow(WindowConfig)
 						Font = Enum.Font.GothamBold,
 						Name = "Title"
 					}), "Text"),
-					AddThemeObject(SetProps(MakeElement("", 13), {
+					AddThemeObject(SetProps(MakeElement("Label", "", 13), {
 						Size = UDim2.new(1, -24, 0, 0),
 						Position = UDim2.new(0, 12, 0, 26),
 						Font = Enum.Font.GothamSemibold,
@@ -1313,7 +1272,7 @@ function OrionLib:MakeWindow(WindowConfig)
 
 				local BindFrame = AddThemeObject(SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(255, 255, 255), 0, 5), {
 					Size = UDim2.new(1, 0, 0, 38),
-						Parent = ItemParent
+					Parent = ItemParent
 				}), {
 					AddThemeObject(SetProps(MakeElement("Label", BindConfig.Name, 15), {
 						Size = UDim2.new(1, -12, 1, 0),
@@ -1562,7 +1521,7 @@ function OrionLib:MakeWindow(WindowConfig)
 				local ColorpickerFrame = AddThemeObject(SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(255, 255, 255), 0, 5), {
 					Size = UDim2.new(1, 0, 0, 38),
 					Parent = ItemParent
-				}, {
+				}), {
 					SetProps(SetChildren(MakeElement("TFrame"), {
 						AddThemeObject(SetProps(MakeElement("Label", ColorpickerConfig.Name, 15), {
 							Size = UDim2.new(1, -12, 1, 0),
@@ -1765,14 +1724,5 @@ end
 function OrionLib:Destroy()
 	Orion:Destroy()
 end
-
-local AxionTheme = {
-    Background = Color3.fromRGB(25, 25, 25),    -- Main background
-    Foreground = Color3.fromRGB(30, 30, 30),    -- Secondary background
-    Accent = Color3.fromRGB(45, 45, 45),        -- Buttons, toggles, etc
-    TextColor = Color3.fromRGB(255, 255, 255),  -- Main text
-    SubTextColor = Color3.fromRGB(200, 200, 200), -- Secondary text
-    BorderColor = Color3.fromRGB(60, 60, 60)    -- Strokes and borders
-}
 
 return OrionLib
