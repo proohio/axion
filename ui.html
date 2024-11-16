@@ -692,61 +692,21 @@ function UILib.CreateWindow(title)
             ColorButton.Parent = ColorpickerFrame
             ApplyCornerRadius(ColorButton, 4)
 
-            -- Create color picker popup (change parent to CoreGui)
-            local ColorPickerPopup = Instance.new("Frame")
-            ColorPickerPopup.Size = UDim2.new(0, 200, 0, 200)
-            ColorPickerPopup.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-            ColorPickerPopup.Visible = false
-            ColorPickerPopup.ZIndex = 100 -- Set high ZIndex
-            ApplyCornerRadius(ColorPickerPopup, 6)
-            
-            -- Create a ScreenGui for the popup
+            -- Create ScreenGui for popup
             local PopupGui = Instance.new("ScreenGui")
             PopupGui.Name = "ColorPickerPopup"
-            PopupGui.DisplayOrder = 999 -- Set high DisplayOrder
-            PopupGui.Parent = game:GetService("CoreGui")
+            PopupGui.DisplayOrder = 999
+            PopupGui.Parent = game.CoreGui
+
+            -- Create popup
+            local ColorPickerPopup = Instance.new("Frame")
+            ColorPickerPopup.Size = UDim2.new(0, 200, 0, 220)
+            ColorPickerPopup.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+            ColorPickerPopup.BorderSizePixel = 0
+            ColorPickerPopup.Visible = false
+            ColorPickerPopup.ZIndex = 100
             ColorPickerPopup.Parent = PopupGui
-
-            -- Update the toggle function to position popup relative to screen
-            ColorButton.MouseButton1Click:Connect(function()
-                ColorPickerPopup.Visible = not ColorPickerPopup.Visible
-                if ColorPickerPopup.Visible then
-                    local buttonPos = ColorButton.AbsolutePosition
-                    local buttonSize = ColorButton.AbsoluteSize
-                    ColorPickerPopup.Position = UDim2.new(0, buttonPos.X - ColorPickerPopup.Size.X.Offset - 10, 
-                                                         0, buttonPos.Y)
-                end
-            end)
-
-            -- Make sure all children have appropriate ZIndex
-            local function setHighZIndex(instance)
-                instance.ZIndex = 100
-                for _, child in pairs(instance:GetChildren()) do
-                    if child:IsA("GuiObject") then
-                        child.ZIndex = 100
-                        setHighZIndex(child)
-                    end
-                end
-            end
-            
-            setHighZIndex(ColorPickerPopup)
-
-            -- Add click detection to close popup when clicking outside
-            local function isInside(frame, position)
-                local framePos = frame.AbsolutePosition
-                local frameSize = frame.AbsoluteSize
-                return position.X >= framePos.X and position.X <= framePos.X + frameSize.X
-                   and position.Y >= framePos.Y and position.Y <= framePos.Y + frameSize.Y
-            end
-
-            UserInputService.InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    local mousePos = UserInputService:GetMouseLocation()
-                    if ColorPickerPopup.Visible and not isInside(ColorPickerPopup, mousePos) and not isInside(ColorButton, mousePos) then
-                        ColorPickerPopup.Visible = false
-                    end
-                end
-            end)
+            ApplyCornerRadius(ColorPickerPopup, 6)
 
             -- Add color wheel
             local ColorWheel = Instance.new("ImageButton")
@@ -754,13 +714,16 @@ function UILib.CreateWindow(title)
             ColorWheel.Position = UDim2.new(0.5, -75, 0, 10)
             ColorWheel.Image = "rbxassetid://4155801252"
             ColorWheel.BackgroundTransparency = 1
+            ColorWheel.ZIndex = 101
             ColorWheel.Parent = ColorPickerPopup
 
             -- Add brightness slider
-            local BrightnessSlider = Instance.new("Frame")
+            local BrightnessSlider = Instance.new("TextButton")
             BrightnessSlider.Size = UDim2.new(0, 150, 0, 20)
             BrightnessSlider.Position = UDim2.new(0.5, -75, 1, -30)
             BrightnessSlider.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            BrightnessSlider.ZIndex = 101
+            BrightnessSlider.Text = ""
             BrightnessSlider.Parent = ColorPickerPopup
             ApplyCornerRadius(BrightnessSlider, 4)
 
@@ -771,79 +734,74 @@ function UILib.CreateWindow(title)
             })
             BrightnessGradient.Parent = BrightnessSlider
 
-            local function updateColor(color)
+            -- Toggle popup visibility
+            ColorButton.MouseButton1Click:Connect(function()
+                ColorPickerPopup.Visible = not ColorPickerPopup.Visible
+                if ColorPickerPopup.Visible then
+                    local buttonPos = ColorButton.AbsolutePosition
+                    ColorPickerPopup.Position = UDim2.new(0, buttonPos.X - ColorPickerPopup.Size.X.Offset - 10, 
+                                                         0, buttonPos.Y)
+                end
+            end)
+
+            -- Close popup when clicking outside
+            UserInputService.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 and ColorPickerPopup.Visible then
+                    local mousePos = UserInputService:GetMouseLocation()
+                    local popupPos = ColorPickerPopup.AbsolutePosition
+                    local popupSize = ColorPickerPopup.AbsoluteSize
+                    local buttonPos = ColorButton.AbsolutePosition
+                    local buttonSize = ColorButton.AbsoluteSize
+
+                    -- Check if click is outside both the popup and the button
+                    if not (mousePos.X >= popupPos.X and mousePos.X <= popupPos.X + popupSize.X and
+                           mousePos.Y >= popupPos.Y and mousePos.Y <= popupPos.Y + popupSize.Y) and
+                       not (mousePos.X >= buttonPos.X and mousePos.X <= buttonPos.X + buttonSize.X and
+                           mousePos.Y >= buttonPos.Y and mousePos.Y <= buttonPos.Y + buttonSize.Y) then
+                        ColorPickerPopup.Visible = false
+                    end
+                end
+            end)
+
+            -- Color selection logic
+            local function updateColor(hue, sat, val)
+                local color = Color3.fromHSV(hue, sat, val)
                 ColorButton.BackgroundColor3 = color
                 callback(color)
             end
 
-            -- Toggle popup
-            ColorButton.MouseButton1Click:Connect(function()
-                ColorPickerPopup.Visible = not ColorPickerPopup.Visible
+            ColorWheel.MouseButton1Down:Connect(function()
+                local connection
+                connection = RunService.RenderStepped:Connect(function()
+                    if UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) then
+                        local mousePos = UserInputService:GetMouseLocation()
+                        local wheelPos = ColorWheel.AbsolutePosition
+                        local wheelSize = ColorWheel.AbsoluteSize
+                        local center = wheelPos + wheelSize/2
+                        local delta = mousePos - center
+                        local h = math.atan2(delta.Y, delta.X)
+                        local s = math.min(delta.Magnitude / (wheelSize.X/2), 1)
+                        updateColor((h + math.pi)/(2*math.pi), s, 1)
+                    else
+                        connection:Disconnect()
+                    end
+                end)
             end)
 
-            -- Color wheel input
-            ColorWheel.InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    local connection
-                    connection = UserInputService.InputChanged:Connect(function(input)
-                        if input.UserInputType == Enum.UserInputType.MouseMovement then
-                            local wheelPosition = ColorWheel.AbsolutePosition
-                            local wheelSize = ColorWheel.AbsoluteSize
-                            
-                            local mousePosition = Vector2.new(
-                                input.Position.X - wheelPosition.X,
-                                input.Position.Y - wheelPosition.Y
-                            )
-                            
-                            local centerPoint = wheelSize / 2
-                            local angle = math.atan2(mousePosition.Y - centerPoint.Y, mousePosition.X - centerPoint.X)
-                            local radius = math.min((mousePosition - centerPoint).Magnitude, centerPoint.X)
-                            
-                            local hue = (angle + math.pi) / (2 * math.pi)
-                            local saturation = radius / centerPoint.X
-                            
-                            updateColor(Color3.fromHSV(hue, saturation, 1))
-                        end
-                    end)
-                    
-                    UserInputService.InputEnded:Connect(function(input)
-                        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                            if connection then
-                                connection:Disconnect()
-                            end
-                        end
-                    end)
-                end
-            end)
-
-            -- Brightness slider input
-            BrightnessSlider.InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    local connection
-                    connection = UserInputService.InputChanged:Connect(function(input)
-                        if input.UserInputType == Enum.UserInputType.MouseMovement then
-                            local sliderPosition = BrightnessSlider.AbsolutePosition
-                            local sliderSize = BrightnessSlider.AbsoluteSize
-                            
-                            local value = math.clamp(
-                                (input.Position.X - sliderPosition.X) / sliderSize.X,
-                                0, 1
-                            )
-                            
-                            local currentColor = ColorButton.BackgroundColor3
-                            local h, s, _ = Color3.toHSV(currentColor)
-                            updateColor(Color3.fromHSV(h, s, value))
-                        end
-                    end)
-                    
-                    UserInputService.InputEnded:Connect(function(input)
-                        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                            if connection then
-                                connection:Disconnect()
-                            end
-                        end
-                    end)
-                end
+            BrightnessSlider.MouseButton1Down:Connect(function()
+                local connection
+                connection = RunService.RenderStepped:Connect(function()
+                    if UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) then
+                        local mousePos = UserInputService:GetMouseLocation()
+                        local sliderPos = BrightnessSlider.AbsolutePosition
+                        local sliderSize = BrightnessSlider.AbsoluteSize
+                        local val = math.clamp((mousePos.X - sliderPos.X) / sliderSize.X, 0, 1)
+                        local h, s = Color3.toHSV(ColorButton.BackgroundColor3)
+                        updateColor(h, s, val)
+                    else
+                        connection:Disconnect()
+                    end
+                end)
             end)
 
             return ColorpickerFrame
