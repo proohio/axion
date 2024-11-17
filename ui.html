@@ -258,14 +258,19 @@ function UILib:MakeWindow(config)
     Title.Font = Enum.Font.GothamBold
     Title.TextXAlignment = Enum.TextXAlignment.Left
 
-    -- Add tabs container
+    -- Create TabContainer properly
+    local TabContainer = Instance.new("Frame")
     TabContainer.Name = "TabContainer"
-    TabContainer.Parent = MainFrame
-    TabContainer.Size = UDim2.new(0, 120, 1, -45)
-    TabContainer.Position = UDim2.new(0, 10, 0, 40)
-    TabContainer.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    TabContainer.BorderSizePixel = 0
-    ApplyCornerRadius(TabContainer, 6)
+    TabContainer.Size = UDim2.new(1, -20, 1, -60)  -- Adjust size as needed
+    TabContainer.Position = UDim2.new(0, 10, 0, 50) -- Position below TopBar
+    TabContainer.BackgroundTransparency = 1
+    TabContainer.Parent = MainFrame  -- Make sure to parent it to MainFrame
+    
+    -- Add UIListLayout to TabContainer
+    local TabList = Instance.new("UIListLayout")
+    TabList.Parent = TabContainer
+    TabList.SortOrder = Enum.SortOrder.LayoutOrder
+    TabList.Padding = UDim.new(0, 5)
 
     -- Add content container
     ContentContainer.Name = "ContentContainer"
