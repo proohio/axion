@@ -639,33 +639,63 @@ function UILib:MakeWindow(config)
         end
         
         function Tab:AddToggle(config)
-            -- Extract flag configuration
-            local flag = config.Flag
-            local save = config.Save
-            
+            -- Validate config
+            assert(type(config) == "table", "AddToggle requires a configuration table")
+            config.Name = config.Name or "Toggle"
+            config.Default = config.Default or false
+            config.Callback = config.Callback or function() end
+            config.Flag = config.Flag
+
             -- Create toggle object
             local ToggleObject = {
-                Value = config.Default or false,
-                Save = save,
-                Flag = flag
+                Value = config.Default,
+                Flag = config.Flag
             }
             
-            -- Register flag if provided
-            if flag then
-                UILib.Flags[flag] = ToggleObject
-            end
+            -- Create UI elements
+            local ToggleFrame = Instance.new("Frame")
+            local ToggleButton = Instance.new("TextButton")
+            local ToggleIndicator = Instance.new("Frame")
             
-            -- Set method
+            ToggleFrame.Size = UDim2.new(1, -10, 0, 35)
+            ToggleFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+            ToggleFrame.BorderSizePixel = 0
+            ToggleFrame.Parent = self.Container
+            ApplyCornerRadius(ToggleFrame, 4)
+            
+            ToggleButton.Size = UDim2.new(1, -40, 1, 0)
+            ToggleButton.Position = UDim2.new(0, 5, 0, 0)
+            ToggleButton.BackgroundTransparency = 1
+            ToggleButton.Text = config.Name
+            ToggleButton.TextColor3 = Color3.fromRGB(200, 200, 200)
+            ToggleButton.TextSize = 14
+            ToggleButton.Font = Enum.Font.GothamSemibold
+            ToggleButton.TextXAlignment = Enum.TextXAlignment.Left
+            ToggleButton.Parent = ToggleFrame
+            
+            ToggleIndicator.Size = UDim2.new(0, 20, 0, 20)
+            ToggleIndicator.Position = UDim2.new(1, -25, 0.5, -10)
+            ToggleIndicator.BackgroundColor3 = config.Default and Color3.fromRGB(0, 170, 255) or Color3.fromRGB(60, 60, 60)
+            ToggleIndicator.Parent = ToggleFrame
+            ApplyCornerRadius(ToggleIndicator, 4)
+
+            -- Add Set function to toggle object
             function ToggleObject:Set(value)
                 self.Value = value
-                -- [Previous toggle update code...]
-                
-                -- Save config if enabled
-                if self.Save and UILib.SaveConfig then
-                    UILib:SaveConfiguration()
-                end
+                ToggleIndicator.BackgroundColor3 = value and Color3.fromRGB(0, 170, 255) or Color3.fromRGB(60, 60, 60)
+                config.Callback(value)
             end
-            
+
+            -- Handle toggle click
+            ToggleButton.MouseButton1Click:Connect(function()
+                ToggleObject:Set(not ToggleObject.Value)
+            end)
+
+            -- Register flag if provided
+            if config.Flag then
+                UILib.Flags[config.Flag] = ToggleObject
+            end
+
             return ToggleObject
         end
         
