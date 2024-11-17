@@ -814,139 +814,77 @@ function UILib:MakeWindow(config)
         end
         
         function Tab:AddDropdown(config)
-            -- Validate config is a table
             assert(type(config) == "table", "AddDropdown requires a configuration table")
             
-            -- Extract configuration
-            local name = config.Name or "Dropdown"
-            local default = config.Default or ""
-            local options = config.Options or {}
-            local callback = config.Callback or function() end
-            
-            -- Create dropdown elements
+            config = config or {}
+            config.Name = config.Name or "Dropdown"
+            config.Default = config.Default or ""
+            config.Options = config.Options or {}
+            config.Callback = config.Callback or function() end
+            config.Flag = config.Flag or nil
+
+            -- Create main dropdown container
             local DropdownFrame = Instance.new("Frame")
-            local Label = Instance.new("TextLabel")
+            DropdownFrame.Size = UDim2.new(1, 0, 0, 32)
+            DropdownFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+            DropdownFrame.BorderSizePixel = 0
+            ApplyCornerRadius(DropdownFrame, 4)
+
+            -- Create dropdown button
             local DropdownButton = Instance.new("TextButton")
-            local OptionsFrame = Instance.new("Frame")
-            local OptionsList = Instance.new("UIListLayout")
-            
-            -- Setup main frame
-            DropdownFrame.Name = name.."_Dropdown"
-            DropdownFrame.Size = UDim2.new(1, -20, 0, 50)
-            DropdownFrame.BackgroundTransparency = 1
-            
-            -- Setup label
-            Label.Name = "Label"
-            Label.Size = UDim2.new(1, 0, 0, 20)
-            Label.BackgroundTransparency = 1
-            Label.Text = name
-            Label.TextColor3 = Color3.fromRGB(255, 255, 255)
-            Label.TextSize = 14
-            Label.Font = Enum.Font.Gotham
-            Label.TextXAlignment = Enum.TextXAlignment.Left
-            Label.Parent = DropdownFrame
-            
-            -- Setup dropdown button
-            DropdownButton.Name = "DropdownButton"
-            DropdownButton.Size = UDim2.new(1, 0, 0, 25)
-            DropdownButton.Position = UDim2.new(0, 0, 0, 25)
-            DropdownButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-            DropdownButton.Text = default
+            DropdownButton.Size = UDim2.new(1, 0, 1, 0)
+            DropdownButton.BackgroundTransparency = 1
+            DropdownButton.Text = config.Name .. ": " .. config.Default
             DropdownButton.TextColor3 = Color3.fromRGB(255, 255, 255)
             DropdownButton.TextSize = 14
-            DropdownButton.Font = Enum.Font.Gotham
+            DropdownButton.Font = Enum.Font.GothamSemibold
             DropdownButton.Parent = DropdownFrame
-            ApplyCornerRadius(DropdownButton, 4)
-            
-            -- Setup options frame
-            OptionsFrame.Name = "Options"
-            OptionsFrame.Size = UDim2.new(1, 0, 0, 0)
-            OptionsFrame.Position = UDim2.new(0, 0, 1, 5)
-            OptionsFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+
+            -- Create options container
+            local OptionsFrame = Instance.new("Frame")
+            OptionsFrame.Size = UDim2.new(1, 0, 0, #config.Options * 25)
+            OptionsFrame.Position = UDim2.new(0, 0, 1, 0)
+            OptionsFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+            OptionsFrame.BorderSizePixel = 0
             OptionsFrame.Visible = false
-            OptionsFrame.ZIndex = 5
-            OptionsFrame.Parent = DropdownButton
+            OptionsFrame.ZIndex = 10
+            OptionsFrame.Parent = DropdownFrame
             ApplyCornerRadius(OptionsFrame, 4)
-            
-            -- Setup options list layout
+
+            -- Add list layout for options
+            local OptionsList = Instance.new("UIListLayout")
             OptionsList.Parent = OptionsFrame
-            OptionsList.SortOrder = Enum.SortOrder.LayoutOrder
-            OptionsList.Padding = UDim.new(0, 2)
-            
-            -- Create dropdown object
-            local DropdownObject = {}
-            local IsOpen = false
-            local CurrentOption = default
-            local Options = options
-            
-            -- Set method for the dropdown
-            function DropdownObject:Set(value)
-                -- Validate input
-                assert(value ~= nil, "Dropdown:Set() requires a value")
+
+            -- Create option buttons
+            for _, option in ipairs(config.Options) do
+                local OptionButton = Instance.new("TextButton")
+                OptionButton.Size = UDim2.new(1, 0, 0, 25)
+                OptionButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+                OptionButton.BorderSizePixel = 0
+                OptionButton.Text = tostring(option)
+                OptionButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+                OptionButton.TextSize = 14
+                OptionButton.Font = Enum.Font.GothamSemibold
+                OptionButton.ZIndex = 11
+                OptionButton.Parent = OptionsFrame
                 
-                -- Check if option exists
-                if table.find(Options, value) then
-                    -- Update current selection
-                    CurrentOption = value
-                    
-                    -- Update visual display
-                    DropdownButton.Text = value
-                    
-                    -- Close dropdown if open
-                    IsOpen = false
+                OptionButton.MouseButton1Click:Connect(function()
+                    DropdownButton.Text = config.Name .. ": " .. option
                     OptionsFrame.Visible = false
+                    config.Callback(option)
                     
-                    -- Call callback with new value
-                    callback(value)
-                    
-                    return value
-                else
-                    warn("Option '" .. tostring(value) .. "' not found in dropdown")
-                end
+                    if config.Flag then
+                        self.Flags[config.Flag] = option
+                    end
+                end)
             end
-            
-            -- Refresh method to update options
-            function DropdownObject:Refresh(newOptions, keepCurrent)
-                assert(type(newOptions) == "table", "Refresh requires a table of options")
-                
-                -- Update options
-                Options = newOptions
-                
-                -- Refresh the dropdown
-                RefreshOptions(keepCurrent)
-                
-                -- If keeping current selection but it's not in new options
-                if keepCurrent and not table.find(Options, CurrentOption) then
-                    CurrentOption = Options[1] or ""
-                    DropdownButton.Text = CurrentOption
-                    callback(CurrentOption)
-                end
-            end
-            
-            -- Toggle dropdown
+
+            -- Toggle dropdown visibility
             DropdownButton.MouseButton1Click:Connect(function()
-                IsOpen = not IsOpen
-                OptionsFrame.Visible = IsOpen
+                OptionsFrame.Visible = not OptionsFrame.Visible
             end)
-            
-            -- Dropdown button hover effect
-            DropdownButton.MouseEnter:Connect(function()
-                TweenService:Create(DropdownButton, TweenInfo.new(0.2), {
-                    BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-                }):Play()
-            end)
-            
-            DropdownButton.MouseLeave:Connect(function()
-                TweenService:Create(DropdownButton, TweenInfo.new(0.2), {
-                    BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-                }):Play()
-            end)
-            
-            -- Initial setup
-            RefreshOptions()
-            DropdownObject:Set(default)
-            
-            return DropdownObject
+
+            return DropdownFrame
         end
         
         function Tab:AddBind(config)
@@ -1650,75 +1588,6 @@ function UILib:Destroy()
     
     -- Add destroyed flag
     self.Destroyed = true
-end
-
-function UILib:AddDropdown(config)
-    config = config or {}
-    config.Name = config.Name or "Dropdown"
-    config.Default = config.Default or ""
-    config.Options = config.Options or {}
-    config.Callback = config.Callback or function() end
-    config.Flag = config.Flag or nil
-
-    local DropdownFrame = Create("Frame", {
-        BackgroundColor3 = Color3.fromRGB(25, 25, 25),
-        BorderSizePixel = 0,
-        Size = UDim2.new(1, 0, 0, 32)
-    })
-
-    local DropdownButton = Create("TextButton", {
-        Parent = DropdownFrame,
-        BackgroundTransparency = 1,
-        Size = UDim2.new(1, 0, 1, 0),
-        Text = config.Name .. ": " .. config.Default,
-        TextColor3 = Color3.fromRGB(255, 255, 255),
-        TextSize = 14,
-        Font = Enum.Font.GothamSemibold
-    })
-
-    local OptionsFrame = Create("Frame", {
-        Parent = DropdownFrame,
-        BackgroundColor3 = Color3.fromRGB(30, 30, 30),
-        BorderSizePixel = 0,
-        Position = UDim2.new(0, 0, 1, 0),
-        Size = UDim2.new(1, 0, 0, #config.Options * 25),
-        Visible = false,
-        ZIndex = 2
-    })
-
-    local OptionsList = Create("UIListLayout", {
-        Parent = OptionsFrame,
-        SortOrder = Enum.SortOrder.LayoutOrder
-    })
-
-    for _, option in ipairs(config.Options) do
-        local OptionButton = Create("TextButton", {
-            Parent = OptionsFrame,
-            BackgroundColor3 = Color3.fromRGB(30, 30, 30),
-            BorderSizePixel = 0,
-            Size = UDim2.new(1, 0, 0, 25),
-            Text = option,
-            TextColor3 = Color3.fromRGB(255, 255, 255),
-            TextSize = 14,
-            Font = Enum.Font.GothamSemibold
-        })
-
-        OptionButton.MouseButton1Click:Connect(function()
-            DropdownButton.Text = config.Name .. ": " .. option
-            OptionsFrame.Visible = false
-            config.Callback(option)
-            
-            if config.Flag then
-                self.Flags[config.Flag] = option
-            end
-        end)
-    end
-
-    DropdownButton.MouseButton1Click:Connect(function()
-        OptionsFrame.Visible = not OptionsFrame.Visible
-    end)
-
-    return DropdownFrame
 end
 
 function UILib:AddTextbox(config)
