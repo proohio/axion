@@ -402,6 +402,12 @@ function UILib:MakeWindow(config)
             TabButton.TextXAlignment = Enum.TextXAlignment.Center
         end
         
+        -- Create UIPadding for the Tab
+        local TabPadding = Instance.new("UIPadding")
+        TabPadding.PaddingLeft = UDim.new(0, 10)  -- Adjust padding values as needed
+        TabPadding.PaddingRight = UDim.new(0, 10)
+        TabPadding.Parent = TabButton
+        
         -- Create tab content container
         local TabContent = Instance.new("ScrollingFrame")
         TabContent.Name = name.."Content"
