@@ -464,19 +464,17 @@ function UILib:MakeWindow(config)
             assert(type(config) == "table", "AddSection requires a configuration table")
             
             local Section = {}
-            local SectionFrame = Instance.new("Frame")
-            local SectionLabel = Instance.new("TextLabel")
-            local SectionContainer = Instance.new("Frame")
             
-            SectionFrame.Name = "Section"
-            SectionFrame.Size = UDim2.new(1, 0, 0, 30)
+            -- Create the section container
+            local SectionFrame = Instance.new("Frame")
+            SectionFrame.Size = UDim2.new(1, -10, 0, 30)
             SectionFrame.BackgroundTransparency = 1
             SectionFrame.Parent = self.Container
             
-            SectionLabel.Name = "SectionLabel"
+            -- Create section label
+            local SectionLabel = Instance.new("TextLabel")
             SectionLabel.Text = config.Name or "Section"
-            SectionLabel.Size = UDim2.new(1, -10, 0, 20)
-            SectionLabel.Position = UDim2.new(0, 5, 0, 0)
+            SectionLabel.Size = UDim2.new(1, 0, 0, 20)
             SectionLabel.BackgroundTransparency = 1
             SectionLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
             SectionLabel.TextSize = 16
@@ -484,23 +482,25 @@ function UILib:MakeWindow(config)
             SectionLabel.TextXAlignment = Enum.TextXAlignment.Left
             SectionLabel.Parent = SectionFrame
             
-            SectionContainer.Name = "SectionContainer"
-            SectionContainer.Size = UDim2.new(1, 0, 0, 0)
-            SectionContainer.Position = UDim2.new(0, 0, 0, 25)
-            SectionContainer.BackgroundTransparency = 1
-            SectionContainer.AutomaticSize = Enum.AutomaticSize.Y
-            SectionContainer.Parent = SectionFrame
+            -- Create container for section elements
+            local ElementContainer = Instance.new("Frame")
+            ElementContainer.Name = "ElementContainer"
+            ElementContainer.Size = UDim2.new(1, 0, 0, 0)
+            ElementContainer.Position = UDim2.new(0, 0, 0, 25)
+            ElementContainer.BackgroundTransparency = 1
+            ElementContainer.AutomaticSize = Enum.AutomaticSize.Y
+            ElementContainer.Parent = SectionFrame
             
+            -- Add UIListLayout to container
             local UIListLayout = Instance.new("UIListLayout")
             UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
             UIListLayout.Padding = UDim.new(0, 5)
-            UIListLayout.Parent = SectionContainer
-
-            -- Add methods to Section
-            function Section:AddButton(config)
-                -- Your existing AddButton code
-            end
-
+            UIListLayout.Parent = ElementContainer
+            
+            -- Store the container reference
+            Section.Container = ElementContainer
+            
+            -- Add Toggle function to Section
             function Section:AddToggle(config)
                 assert(type(config) == "table", "AddToggle requires a configuration table")
                 
@@ -508,39 +508,39 @@ function UILib:MakeWindow(config)
                 ToggleFrame.Size = UDim2.new(1, 0, 0, 35)
                 ToggleFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
                 ToggleFrame.BorderSizePixel = 0
-                ToggleFrame.Parent = SectionContainer
+                ToggleFrame.Parent = self.Container
                 ApplyCornerRadius(ToggleFrame, 4)
-
+                
                 local ToggleButton = Instance.new("TextButton")
                 ToggleButton.Size = UDim2.new(1, -40, 1, 0)
                 ToggleButton.Position = UDim2.new(0, 5, 0, 0)
                 ToggleButton.BackgroundTransparency = 1
-                ToggleButton.Text = config.Name
+                ToggleButton.Text = config.Name or "Toggle"
                 ToggleButton.TextColor3 = Color3.fromRGB(200, 200, 200)
                 ToggleButton.TextSize = 14
                 ToggleButton.Font = Enum.Font.GothamSemibold
                 ToggleButton.TextXAlignment = Enum.TextXAlignment.Left
                 ToggleButton.Parent = ToggleFrame
-
+                
                 local ToggleIndicator = Instance.new("Frame")
                 ToggleIndicator.Size = UDim2.new(0, 20, 0, 20)
                 ToggleIndicator.Position = UDim2.new(1, -25, 0.5, -10)
                 ToggleIndicator.BackgroundColor3 = config.Default and Color3.fromRGB(0, 170, 255) or Color3.fromRGB(60, 60, 60)
                 ToggleIndicator.Parent = ToggleFrame
                 ApplyCornerRadius(ToggleIndicator, 4)
-
+                
                 local toggled = config.Default or false
                 ToggleButton.MouseButton1Click:Connect(function()
                     toggled = not toggled
                     ToggleIndicator.BackgroundColor3 = toggled and Color3.fromRGB(0, 170, 255) or Color3.fromRGB(60, 60, 60)
-                    config.Callback(toggled)
+                    if config.Callback then
+                        config.Callback(toggled)
+                    end
                 end)
-
+                
                 return ToggleFrame
             end
-
-            -- Add other UI element methods here (AddDropdown, AddColorpicker, etc.)
-
+            
             return Section
         end
         
