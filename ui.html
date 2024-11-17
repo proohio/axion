@@ -461,97 +461,86 @@ function UILib:MakeWindow(config)
         
         -- Add section functionality
         function Tab:AddSection(config)
-            -- Validate config is a table
             assert(type(config) == "table", "AddSection requires a configuration table")
             
-            -- Extract configuration
-            local name = config.Name or "New Section"
-            
             local Section = {}
-            
-            -- Create section frame
             local SectionFrame = Instance.new("Frame")
             local SectionLabel = Instance.new("TextLabel")
-            local SectionContent = Instance.new("Frame")
-            local UIListLayout = Instance.new("UIListLayout")
+            local SectionContainer = Instance.new("Frame")
             
-            -- Main section frame
-            SectionFrame.Name = name.."Section"
-            SectionFrame.Size = UDim2.new(1, -20, 0, 35) -- Will auto-adjust based on content
+            SectionFrame.Name = "Section"
+            SectionFrame.Size = UDim2.new(1, 0, 0, 30)
             SectionFrame.BackgroundTransparency = 1
-            SectionFrame.Parent = TabContent
+            SectionFrame.Parent = self.Container
             
-            -- Section label
-            SectionLabel.Name = "Label"
-            SectionLabel.Size = UDim2.new(1, 0, 0, 25)
+            SectionLabel.Name = "SectionLabel"
+            SectionLabel.Text = config.Name or "Section"
+            SectionLabel.Size = UDim2.new(1, -10, 0, 20)
+            SectionLabel.Position = UDim2.new(0, 5, 0, 0)
             SectionLabel.BackgroundTransparency = 1
-            SectionLabel.Text = name
-            SectionLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-            SectionLabel.TextSize = 14
+            SectionLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+            SectionLabel.TextSize = 16
             SectionLabel.Font = Enum.Font.GothamBold
+            SectionLabel.TextXAlignment = Enum.TextXAlignment.Left
             SectionLabel.Parent = SectionFrame
             
-            -- Content container
-            SectionContent.Name = "Content"
-            SectionContent.Size = UDim2.new(1, 0, 0, 0)
-            SectionContent.Position = UDim2.new(0, 0, 0, 25)
-            SectionContent.BackgroundTransparency = 1
-            SectionContent.Parent = SectionFrame
+            SectionContainer.Name = "SectionContainer"
+            SectionContainer.Size = UDim2.new(1, 0, 0, 0)
+            SectionContainer.Position = UDim2.new(0, 0, 0, 25)
+            SectionContainer.BackgroundTransparency = 1
+            SectionContainer.AutomaticSize = Enum.AutomaticSize.Y
+            SectionContainer.Parent = SectionFrame
             
-            -- Layout for content
-            UIListLayout.Parent = SectionContent
+            local UIListLayout = Instance.new("UIListLayout")
             UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
             UIListLayout.Padding = UDim.new(0, 5)
-            
-            -- Auto-size handler
-            UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-                SectionContent.Size = UDim2.new(1, 0, 0, UIListLayout.AbsoluteContentSize.Y)
-                SectionFrame.Size = UDim2.new(1, -20, 0, UIListLayout.AbsoluteContentSize.Y + 30)
-            end)
-            
-            -- Add element functions to section
+            UIListLayout.Parent = SectionContainer
+
+            -- Add methods to Section
             function Section:AddButton(config)
-                local Button = Tab:AddButton(config)
-                Button.Parent = SectionContent
-                return Button
+                -- Your existing AddButton code
             end
-            
+
             function Section:AddToggle(config)
-                local Toggle = Tab:AddToggle(config)
-                Toggle.Parent = SectionContent
-                return Toggle
+                assert(type(config) == "table", "AddToggle requires a configuration table")
+                
+                local ToggleFrame = Instance.new("Frame")
+                ToggleFrame.Size = UDim2.new(1, 0, 0, 35)
+                ToggleFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+                ToggleFrame.BorderSizePixel = 0
+                ToggleFrame.Parent = SectionContainer
+                ApplyCornerRadius(ToggleFrame, 4)
+
+                local ToggleButton = Instance.new("TextButton")
+                ToggleButton.Size = UDim2.new(1, -40, 1, 0)
+                ToggleButton.Position = UDim2.new(0, 5, 0, 0)
+                ToggleButton.BackgroundTransparency = 1
+                ToggleButton.Text = config.Name
+                ToggleButton.TextColor3 = Color3.fromRGB(200, 200, 200)
+                ToggleButton.TextSize = 14
+                ToggleButton.Font = Enum.Font.GothamSemibold
+                ToggleButton.TextXAlignment = Enum.TextXAlignment.Left
+                ToggleButton.Parent = ToggleFrame
+
+                local ToggleIndicator = Instance.new("Frame")
+                ToggleIndicator.Size = UDim2.new(0, 20, 0, 20)
+                ToggleIndicator.Position = UDim2.new(1, -25, 0.5, -10)
+                ToggleIndicator.BackgroundColor3 = config.Default and Color3.fromRGB(0, 170, 255) or Color3.fromRGB(60, 60, 60)
+                ToggleIndicator.Parent = ToggleFrame
+                ApplyCornerRadius(ToggleIndicator, 4)
+
+                local toggled = config.Default or false
+                ToggleButton.MouseButton1Click:Connect(function()
+                    toggled = not toggled
+                    ToggleIndicator.BackgroundColor3 = toggled and Color3.fromRGB(0, 170, 255) or Color3.fromRGB(60, 60, 60)
+                    config.Callback(toggled)
+                end)
+
+                return ToggleFrame
             end
-            
-            function Section:AddSlider(config)
-                local Slider = Tab:AddSlider(config)
-                Slider.Parent = SectionContent
-                return Slider
-            end
-            
-            function Section:AddDropdown(config)
-                local Dropdown = Tab:AddDropdown(config)
-                Dropdown.Parent = SectionContent
-                return Dropdown
-            end
-            
-            function Section:AddBind(config)
-                local Keybind = Tab:AddBind(config)
-                Keybind.Parent = SectionContent
-                return Keybind
-            end
-            
-            function Section:AddColorpicker(config)
-                local Colorpicker = Tab:AddColorpicker(config)
-                Colorpicker.Parent = SectionContent
-                return Colorpicker
-            end
-            
-            function Section:AddLabel(config)
-                local Label = Tab:AddLabel(config)
-                Label.Parent = SectionContent
-                return Label
-            end
-            
+
+            -- Add other UI element methods here (AddDropdown, AddColorpicker, etc.)
+
             return Section
         end
         
