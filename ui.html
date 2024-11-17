@@ -500,46 +500,7 @@ function UILib:MakeWindow(config)
             -- Store the container reference
             Section.Container = ElementContainer
             
-            -- Add Toggle function to Section
-            function Section:AddToggle(config)
-                assert(type(config) == "table", "AddToggle requires a configuration table")
-                
-                local ToggleFrame = Instance.new("Frame")
-                ToggleFrame.Size = UDim2.new(1, 0, 0, 35)
-                ToggleFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-                ToggleFrame.BorderSizePixel = 0
-                ToggleFrame.Parent = self.Container
-                ApplyCornerRadius(ToggleFrame, 4)
-                
-                local ToggleButton = Instance.new("TextButton")
-                ToggleButton.Size = UDim2.new(1, -40, 1, 0)
-                ToggleButton.Position = UDim2.new(0, 5, 0, 0)
-                ToggleButton.BackgroundTransparency = 1
-                ToggleButton.Text = config.Name or "Toggle"
-                ToggleButton.TextColor3 = Color3.fromRGB(200, 200, 200)
-                ToggleButton.TextSize = 14
-                ToggleButton.Font = Enum.Font.GothamSemibold
-                ToggleButton.TextXAlignment = Enum.TextXAlignment.Left
-                ToggleButton.Parent = ToggleFrame
-                
-                local ToggleIndicator = Instance.new("Frame")
-                ToggleIndicator.Size = UDim2.new(0, 20, 0, 20)
-                ToggleIndicator.Position = UDim2.new(1, -25, 0.5, -10)
-                ToggleIndicator.BackgroundColor3 = config.Default and Color3.fromRGB(0, 170, 255) or Color3.fromRGB(60, 60, 60)
-                ToggleIndicator.Parent = ToggleFrame
-                ApplyCornerRadius(ToggleIndicator, 4)
-                
-                local toggled = config.Default or false
-                ToggleButton.MouseButton1Click:Connect(function()
-                    toggled = not toggled
-                    ToggleIndicator.BackgroundColor3 = toggled and Color3.fromRGB(0, 170, 255) or Color3.fromRGB(60, 60, 60)
-                    if config.Callback then
-                        config.Callback(toggled)
-                    end
-                end)
-                
-                return ToggleFrame
-            end
+            -- Add Toggle function to Sectio
             
             return Section
         end
