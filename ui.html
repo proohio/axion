@@ -1652,4 +1652,109 @@ function UILib:Destroy()
     self.Destroyed = true
 end
 
+function UILib:AddDropdown(config)
+    config = config or {}
+    config.Name = config.Name or "Dropdown"
+    config.Default = config.Default or ""
+    config.Options = config.Options or {}
+    config.Callback = config.Callback or function() end
+    config.Flag = config.Flag or nil
+
+    local DropdownFrame = Create("Frame", {
+        BackgroundColor3 = Color3.fromRGB(25, 25, 25),
+        BorderSizePixel = 0,
+        Size = UDim2.new(1, 0, 0, 32)
+    })
+
+    local DropdownButton = Create("TextButton", {
+        Parent = DropdownFrame,
+        BackgroundTransparency = 1,
+        Size = UDim2.new(1, 0, 1, 0),
+        Text = config.Name .. ": " .. config.Default,
+        TextColor3 = Color3.fromRGB(255, 255, 255),
+        TextSize = 14,
+        Font = Enum.Font.GothamSemibold
+    })
+
+    local OptionsFrame = Create("Frame", {
+        Parent = DropdownFrame,
+        BackgroundColor3 = Color3.fromRGB(30, 30, 30),
+        BorderSizePixel = 0,
+        Position = UDim2.new(0, 0, 1, 0),
+        Size = UDim2.new(1, 0, 0, #config.Options * 25),
+        Visible = false,
+        ZIndex = 2
+    })
+
+    local OptionsList = Create("UIListLayout", {
+        Parent = OptionsFrame,
+        SortOrder = Enum.SortOrder.LayoutOrder
+    })
+
+    for _, option in ipairs(config.Options) do
+        local OptionButton = Create("TextButton", {
+            Parent = OptionsFrame,
+            BackgroundColor3 = Color3.fromRGB(30, 30, 30),
+            BorderSizePixel = 0,
+            Size = UDim2.new(1, 0, 0, 25),
+            Text = option,
+            TextColor3 = Color3.fromRGB(255, 255, 255),
+            TextSize = 14,
+            Font = Enum.Font.GothamSemibold
+        })
+
+        OptionButton.MouseButton1Click:Connect(function()
+            DropdownButton.Text = config.Name .. ": " .. option
+            OptionsFrame.Visible = false
+            config.Callback(option)
+            
+            if config.Flag then
+                self.Flags[config.Flag] = option
+            end
+        end)
+    end
+
+    DropdownButton.MouseButton1Click:Connect(function()
+        OptionsFrame.Visible = not OptionsFrame.Visible
+    end)
+
+    return DropdownFrame
+end
+
+function UILib:AddTextbox(config)
+    config = config or {}
+    config.Name = config.Name or "Textbox"
+    config.Default = config.Default or ""
+    config.TextDisappear = config.TextDisappear or false
+    config.Callback = config.Callback or function() end
+
+    local TextboxFrame = Create("Frame", {
+        BackgroundColor3 = Color3.fromRGB(25, 25, 25),
+        BorderSizePixel = 0,
+        Size = UDim2.new(1, 0, 0, 32)
+    })
+
+    local TextBox = Create("TextBox", {
+        Parent = TextboxFrame,
+        BackgroundTransparency = 1,
+        Size = UDim2.new(1, 0, 1, 0),
+        Text = config.Default,
+        PlaceholderText = config.Name,
+        TextColor3 = Color3.fromRGB(255, 255, 255),
+        TextSize = 14,
+        Font = Enum.Font.GothamSemibold
+    })
+
+    TextBox.FocusLost:Connect(function(enterPressed)
+        if enterPressed or not config.TextDisappear then
+            config.Callback(TextBox.Text)
+        end
+        if config.TextDisappear then
+            TextBox.Text = ""
+        end
+    end)
+
+    return TextboxFrame
+end
+
 return UILib
