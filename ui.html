@@ -814,8 +814,6 @@ function UILib:MakeWindow(config)
         end
         
         function Tab:AddDropdown(config)
-            assert(type(config) == "table", "AddDropdown requires a configuration table")
-            
             config = config or {}
             config.Name = config.Name or "Dropdown"
             config.Default = config.Default or ""
@@ -823,27 +821,30 @@ function UILib:MakeWindow(config)
             config.Callback = config.Callback or function() end
             config.Flag = config.Flag or nil
 
-            -- Create main dropdown container
+            -- Create main dropdown container with proper positioning
             local DropdownFrame = Instance.new("Frame")
-            DropdownFrame.Size = UDim2.new(1, 0, 0, 32)
+            DropdownFrame.Size = UDim2.new(1, 0, 0, 35) -- Full width, fixed height
             DropdownFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
             DropdownFrame.BorderSizePixel = 0
+            DropdownFrame.Position = UDim2.new(0, 0, 0, 0) -- Reset position to top
             ApplyCornerRadius(DropdownFrame, 4)
 
             -- Create dropdown button
             local DropdownButton = Instance.new("TextButton")
-            DropdownButton.Size = UDim2.new(1, 0, 1, 0)
+            DropdownButton.Size = UDim2.new(1, -10, 1, 0)
+            DropdownButton.Position = UDim2.new(0, 5, 0, 0)
             DropdownButton.BackgroundTransparency = 1
             DropdownButton.Text = config.Name .. ": " .. config.Default
-            DropdownButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+            DropdownButton.TextColor3 = Color3.fromRGB(200, 200, 200)
             DropdownButton.TextSize = 14
             DropdownButton.Font = Enum.Font.GothamSemibold
             DropdownButton.Parent = DropdownFrame
+            DropdownButton.TextXAlignment = Enum.TextXAlignment.Left
 
-            -- Create options container
+            -- Create options container with proper positioning
             local OptionsFrame = Instance.new("Frame")
             OptionsFrame.Size = UDim2.new(1, 0, 0, #config.Options * 25)
-            OptionsFrame.Position = UDim2.new(0, 0, 1, 0)
+            OptionsFrame.Position = UDim2.new(0, 0, 1, 2)
             OptionsFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
             OptionsFrame.BorderSizePixel = 0
             OptionsFrame.Visible = false
@@ -853,20 +854,43 @@ function UILib:MakeWindow(config)
 
             -- Add list layout for options
             local OptionsList = Instance.new("UIListLayout")
+            OptionsList.Padding = UDim.new(0, 2) -- Add padding between options
             OptionsList.Parent = OptionsFrame
+
+            -- Add padding around options
+            local OptionsPadding = Instance.new("UIPadding")
+            OptionsPadding.PaddingLeft = UDim.new(0, 5)
+            OptionsPadding.PaddingRight = UDim.new(0, 5)
+            OptionsPadding.PaddingTop = UDim.new(0, 2)
+            OptionsPadding.PaddingBottom = UDim.new(0, 2)
+            OptionsPadding.Parent = OptionsFrame
 
             -- Create option buttons
             for _, option in ipairs(config.Options) do
                 local OptionButton = Instance.new("TextButton")
-                OptionButton.Size = UDim2.new(1, 0, 0, 25)
-                OptionButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+                OptionButton.Size = UDim2.new(1, 0, 0, 28) -- Increased height
+                OptionButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30) -- Slightly lighter than container
                 OptionButton.BorderSizePixel = 0
                 OptionButton.Text = tostring(option)
-                OptionButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+                OptionButton.TextColor3 = Color3.fromRGB(200, 200, 200) -- Lighter text
                 OptionButton.TextSize = 14
                 OptionButton.Font = Enum.Font.GothamSemibold
                 OptionButton.ZIndex = 11
                 OptionButton.Parent = OptionsFrame
+                ApplyCornerRadius(OptionButton, 4)
+
+                -- Hover effect
+                OptionButton.MouseEnter:Connect(function()
+                    TweenService:Create(OptionButton, TweenInfo.new(0.2), {
+                        BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+                    }):Play()
+                end)
+
+                OptionButton.MouseLeave:Connect(function()
+                    TweenService:Create(OptionButton, TweenInfo.new(0.2), {
+                        BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+                    }):Play()
+                end)
                 
                 OptionButton.MouseButton1Click:Connect(function()
                     DropdownButton.Text = config.Name .. ": " .. option
@@ -1624,6 +1648,191 @@ function UILib:AddTextbox(config)
     end)
 
     return TextboxFrame
+end
+
+-- Add these methods before the return UILib line
+
+function Section:AddToggle(config)
+    local ToggleFrame = Instance.new("Frame")
+    ToggleFrame.Size = UDim2.new(1, 0, 0, 35)
+    ToggleFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    ToggleFrame.BorderSizePixel = 0
+    ApplyCornerRadius(ToggleFrame, 4)
+
+    local ToggleButton = Instance.new("TextButton")
+    ToggleButton.Size = UDim2.new(1, -40, 1, 0)
+    ToggleButton.Position = UDim2.new(0, 5, 0, 0)
+    ToggleButton.BackgroundTransparency = 1
+    ToggleButton.Text = config.Name
+    ToggleButton.TextColor3 = Color3.fromRGB(200, 200, 200)
+    ToggleButton.TextSize = 14
+    ToggleButton.Font = Enum.Font.GothamSemibold
+    ToggleButton.TextXAlignment = Enum.TextXAlignment.Left
+    ToggleButton.Parent = ToggleFrame
+
+    local ToggleIndicator = Instance.new("Frame")
+    ToggleIndicator.Size = UDim2.new(0, 20, 0, 20)
+    ToggleIndicator.Position = UDim2.new(1, -25, 0.5, -10)
+    ToggleIndicator.BackgroundColor3 = config.Default and Color3.fromRGB(0, 170, 255) or Color3.fromRGB(60, 60, 60)
+    ToggleIndicator.Parent = ToggleFrame
+    ApplyCornerRadius(ToggleIndicator, 4)
+
+    local toggled = config.Default or false
+    ToggleButton.MouseButton1Click:Connect(function()
+        toggled = not toggled
+        ToggleIndicator.BackgroundColor3 = toggled and Color3.fromRGB(0, 170, 255) or Color3.fromRGB(60, 60, 60)
+        config.Callback(toggled)
+    end)
+
+    return ToggleFrame
+end
+
+function Section:AddSlider(config)
+    local SliderFrame = Instance.new("Frame")
+    SliderFrame.Size = UDim2.new(1, 0, 0, 50)
+    SliderFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    SliderFrame.BorderSizePixel = 0
+    ApplyCornerRadius(SliderFrame, 4)
+
+    local SliderTitle = Instance.new("TextLabel")
+    SliderTitle.Size = UDim2.new(1, -10, 0, 25)
+    SliderTitle.Position = UDim2.new(0, 5, 0, 0)
+    SliderTitle.BackgroundTransparency = 1
+    SliderTitle.Text = config.Name
+    SliderTitle.TextColor3 = Color3.fromRGB(200, 200, 200)
+    SliderTitle.TextSize = 14
+    SliderTitle.Font = Enum.Font.GothamSemibold
+    SliderTitle.TextXAlignment = Enum.TextXAlignment.Left
+    SliderTitle.Parent = SliderFrame
+
+    local SliderBackground = Instance.new("Frame")
+    SliderBackground.Size = UDim2.new(1, -10, 0, 10)
+    SliderBackground.Position = UDim2.new(0, 5, 0, 35)
+    SliderBackground.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    SliderBackground.BorderSizePixel = 0
+    SliderBackground.Parent = SliderFrame
+    ApplyCornerRadius(SliderBackground, 4)
+
+    local SliderFill = Instance.new("Frame")
+    SliderFill.Size = UDim2.new(0.5, 0, 1, 0)
+    SliderFill.BackgroundColor3 = config.Color or Color3.fromRGB(0, 170, 255)
+    SliderFill.BorderSizePixel = 0
+    SliderFill.Parent = SliderBackground
+    ApplyCornerRadius(SliderFill, 4)
+
+    local ValueLabel = Instance.new("TextLabel")
+    ValueLabel.Size = UDim2.new(0, 50, 0, 20)
+    ValueLabel.Position = UDim2.new(1, -55, 0, 0)
+    ValueLabel.BackgroundTransparency = 1
+    ValueLabel.Text = tostring(config.Default)
+    ValueLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+    ValueLabel.TextSize = 14
+    ValueLabel.Font = Enum.Font.GothamSemibold
+    ValueLabel.Parent = SliderFrame
+
+    -- Add slider functionality here
+    local UserInputService = game:GetService("UserInputService")
+    local dragging = false
+
+    SliderBackground.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+        end
+    end)
+
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = false
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+            local pos = UDim2.new(math.clamp((input.Position.X - SliderBackground.AbsolutePosition.X) / SliderBackground.AbsoluteSize.X, 0, 1), 0, 1, 0)
+            SliderFill.Size = pos
+            local value = math.floor(((pos.X.Scale * (config.Max - config.Min)) + config.Min) / config.Increment + 0.5) * config.Increment
+            ValueLabel.Text = tostring(value)
+            config.Callback(value)
+        end
+    end)
+
+    return SliderFrame
+end
+
+function Section:AddBind(config)
+    local BindFrame = Instance.new("Frame")
+    BindFrame.Size = UDim2.new(1, 0, 0, 35)
+    BindFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    BindFrame.BorderSizePixel = 0
+    ApplyCornerRadius(BindFrame, 4)
+
+    local BindButton = Instance.new("TextButton")
+    BindButton.Size = UDim2.new(1, -10, 1, 0)
+    BindButton.Position = UDim2.new(0, 5, 0, 0)
+    BindButton.BackgroundTransparency = 1
+    BindButton.Text = config.Name .. ": " .. config.Default.Name
+    BindButton.TextColor3 = Color3.fromRGB(200, 200, 200)
+    BindButton.TextSize = 14
+    BindButton.Font = Enum.Font.GothamSemibold
+    BindButton.TextXAlignment = Enum.TextXAlignment.Left
+    BindButton.Parent = BindFrame
+
+    local listening = false
+    local currentKey = config.Default
+
+    BindButton.MouseButton1Click:Connect(function()
+        listening = true
+        BindButton.Text = config.Name .. ": ..."
+    end)
+
+    UserInputService.InputBegan:Connect(function(input)
+        if listening and input.UserInputType == Enum.UserInputType.Keyboard then
+            currentKey = input.KeyCode
+            BindButton.Text = config.Name .. ": " .. currentKey.Name
+            listening = false
+            config.Callback()
+        elseif not listening and input.KeyCode == currentKey then
+            config.Callback()
+        end
+    end)
+
+    return BindFrame
+end
+
+function Section:AddColorpicker(config)
+    local ColorpickerFrame = Instance.new("Frame")
+    ColorpickerFrame.Size = UDim2.new(1, 0, 0, 35)
+    ColorpickerFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    ColorpickerFrame.BorderSizePixel = 0
+    ApplyCornerRadius(ColorpickerFrame, 4)
+
+    local ColorButton = Instance.new("TextButton")
+    ColorButton.Size = UDim2.new(1, -40, 1, 0)
+    ColorButton.Position = UDim2.new(0, 5, 0, 0)
+    ColorButton.BackgroundTransparency = 1
+    ColorButton.Text = config.Name
+    ColorButton.TextColor3 = Color3.fromRGB(200, 200, 200)
+    ColorButton.TextSize = 14
+    ColorButton.Font = Enum.Font.GothamSemibold
+    ColorButton.TextXAlignment = Enum.TextXAlignment.Left
+    ColorButton.Parent = ColorpickerFrame
+
+    local ColorDisplay = Instance.new("Frame")
+    ColorDisplay.Size = UDim2.new(0, 20, 0, 20)
+    ColorDisplay.Position = UDim2.new(1, -25, 0.5, -10)
+    ColorDisplay.BackgroundColor3 = config.Default
+    ColorDisplay.Parent = ColorpickerFrame
+    ApplyCornerRadius(ColorDisplay, 4)
+
+    -- Add color picker functionality here
+    -- This is a simplified version - you might want to add a proper color picker UI
+    ColorButton.MouseButton1Click:Connect(function()
+        local color = Color3.new(math.random(), math.random(), math.random())
+        ColorDisplay.BackgroundColor3 = color
+        config.Callback(color)
+    end)
+
+    return ColorpickerFrame
 end
 
 return UILib
