@@ -329,7 +329,7 @@ function UILib:MakeWindow(config)
     MinimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
     MinimizeButton.Font = Enum.Font.GothamBold
     MinimizeButton.Parent = TopBar
-    
+
     local CloseButton = Instance.new("TextButton")
     CloseButton.Size = UDim2.new(0, 30, 0, 30)
     CloseButton.Position = UDim2.new(1, -30, 0, 2)
@@ -364,7 +364,7 @@ function UILib:MakeWindow(config)
     local tabs = {}
     local currentTab = nil
 
-    function Window:CreateTab(config)
+    function Window:MakeTab(config)
         -- Extract configuration or set defaults
         local name = (type(config) == "table" and config.Name) or config or "New Tab"
         local icon = (type(config) == "table" and config.Icon) or ""
