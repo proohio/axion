@@ -326,35 +326,39 @@ function UILib:MakeWindow(config)
         
         -- Add section functionality
         function Tab:AddSection(config)
-            config = config or {}
+            assert(type(config) == "table", "AddSection requires a configuration table")
             config.Name = config.Name or "Section"
-
-            local Section = {}
+            
+            -- Create the Section object with proper metatable
+            local Section = setmetatable({}, {
+                __index = Section
+            })
+            
+            -- Create section container
             Section.Container = Instance.new("Frame")
             Section.Container.Size = UDim2.new(1, -10, 0, 30)
             Section.Container.BackgroundTransparency = 1
             Section.Container.Parent = self.Container
-
-            -- Add UIListLayout to section
+            
+            -- Add UIListLayout
             local UIListLayout = Instance.new("UIListLayout")
             UIListLayout.Padding = UDim.new(0, 5)
             UIListLayout.Parent = Section.Container
-
-            -- Add all the element functions to Section
+            
+            -- Define AddToggle method
             function Section:AddToggle(config)
-                config = config or {}
+                assert(type(config) == "table", "AddToggle requires a configuration table")
                 config.Name = config.Name or "Toggle"
                 config.Default = config.Default or false
                 config.Callback = config.Callback or function() end
-
-                -- Toggle implementation from before
+                
                 local ToggleFrame = Instance.new("Frame")
                 ToggleFrame.Size = UDim2.new(1, 0, 0, 35)
                 ToggleFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
                 ToggleFrame.BorderSizePixel = 0
                 ToggleFrame.Parent = self.Container
                 ApplyCornerRadius(ToggleFrame, 4)
-
+                
                 local ToggleButton = Instance.new("TextButton")
                 ToggleButton.Size = UDim2.new(1, -40, 1, 0)
                 ToggleButton.Position = UDim2.new(0, 5, 0, 0)
@@ -377,141 +381,14 @@ function UILib:MakeWindow(config)
                 ToggleButton.MouseButton1Click:Connect(function()
                     toggled = not toggled
                     ToggleIndicator.BackgroundColor3 = toggled and Color3.fromRGB(0, 170, 255) or Color3.fromRGB(60, 60, 60)
-                    if config.Callback then
-                        config.Callback(toggled)
-                    end
+                    config.Callback(toggled)
                 end)
 
                 return ToggleFrame
             end
-
-            function Section:AddSlider(config)
-                config = config or {}
-                config.Name = config.Name or "Slider"
-                config.Min = config.Min or 0
-                config.Max = config.Max or 100
-                config.Default = config.Default or config.Min
-                config.Increment = config.Increment or 1
-                config.ValueName = config.ValueName or ""
-                config.Callback = config.Callback or function() end
-                
-                local SliderFrame = Instance.new("Frame")
-                SliderFrame.Size = UDim2.new(1, 0, 0, 50)
-                SliderFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-                SliderFrame.BorderSizePixel = 0
-                SliderFrame.Parent = self.Container
-                ApplyCornerRadius(SliderFrame, 4)
-
-                local SliderTitle = Instance.new("TextLabel")
-                SliderTitle.Size = UDim2.new(1, -10, 0, 25)
-                SliderTitle.Position = UDim2.new(0, 5, 0, 0)
-                SliderTitle.BackgroundTransparency = 1
-                SliderTitle.Text = config.Name
-                SliderTitle.TextColor3 = Color3.fromRGB(200, 200, 200)
-                SliderTitle.TextSize = 14
-                SliderTitle.Font = Enum.Font.GothamSemibold
-                SliderTitle.TextXAlignment = Enum.TextXAlignment.Left
-                SliderTitle.Parent = SliderFrame
-
-                local SliderBackground = Instance.new("Frame")
-                SliderBackground.Size = UDim2.new(1, -10, 0, 10)
-                SliderBackground.Position = UDim2.new(0, 5, 0, 35)
-                SliderBackground.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-                SliderBackground.BorderSizePixel = 0
-                SliderBackground.Parent = SliderFrame
-                ApplyCornerRadius(SliderBackground, 4)
-
-                local SliderFill = Instance.new("Frame")
-                SliderFill.Size = UDim2.new(0.5, 0, 1, 0)
-                SliderFill.BackgroundColor3 = config.Color or Color3.fromRGB(0, 170, 255)
-                SliderFill.BorderSizePixel = 0
-                SliderFill.Parent = SliderBackground
-                ApplyCornerRadius(SliderFill, 4)
-
-                local ValueLabel = Instance.new("TextLabel")
-                ValueLabel.Size = UDim2.new(0, 50, 0, 20)
-                ValueLabel.Position = UDim2.new(1, -55, 0, 0)
-                ValueLabel.BackgroundTransparency = 1
-                ValueLabel.Text = tostring(config.Default) .. " " .. config.ValueName
-                ValueLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-                ValueLabel.TextSize = 14
-                ValueLabel.Font = Enum.Font.GothamSemibold
-                ValueLabel.Parent = SliderFrame
-
-                -- Add slider functionality here
-                local UserInputService = game:GetService("UserInputService")
-                local dragging = false
-
-                SliderBackground.InputBegan:Connect(function(input)
-                    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                        dragging = true
-                    end
-                end)
-
-                UserInputService.InputEnded:Connect(function(input)
-                    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                        dragging = false
-                    end
-                end)
-
-                UserInputService.InputChanged:Connect(function(input)
-                    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-                        local pos = UDim2.new(math.clamp((input.Position.X - SliderBackground.AbsolutePosition.X) / SliderBackground.AbsoluteSize.X, 0, 1), 0, 1, 0)
-                        SliderFill.Size = pos
-                        local value = math.floor(((pos.X.Scale * (config.Max - config.Min)) + config.Min) / config.Increment + 0.5) * config.Increment
-                        ValueLabel.Text = tostring(value) .. " " .. config.ValueName
-                        config.Callback(value)
-                    end
-                end)
-
-                return SliderFrame
-            end
-
-            function Section:AddColorpicker(config)
-                config = config or {}
-                config.Name = config.Name or "Colorpicker"
-                config.Default = config.Default or Color3.fromRGB(255, 0, 0)
-                config.Callback = config.Callback or function() end
-                
-                local ColorpickerFrame = Instance.new("Frame")
-                ColorpickerFrame.Size = UDim2.new(1, -20, 0, 35)
-                ColorpickerFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-                ColorpickerFrame.BorderSizePixel = 0
-                ColorpickerFrame.Parent = self.Container
-                ApplyCornerRadius(ColorpickerFrame, 4)
-
-                local ColorButton = Instance.new("TextButton")
-                ColorButton.Size = UDim2.new(1, -40, 1, 0)
-                ColorButton.Position = UDim2.new(0, 5, 0, 0)
-                ColorButton.BackgroundTransparency = 1
-                ColorButton.Text = config.Name
-                ColorButton.TextColor3 = Color3.fromRGB(200, 200, 200)
-                ColorButton.TextSize = 14
-                ColorButton.Font = Enum.Font.GothamSemibold
-                ColorButton.TextXAlignment = Enum.TextXAlignment.Left
-                ColorButton.Parent = ColorpickerFrame
-
-                local ColorDisplay = Instance.new("Frame")
-                ColorDisplay.Size = UDim2.new(0, 20, 0, 20)
-                ColorDisplay.Position = UDim2.new(1, -25, 0.5, -10)
-                ColorDisplay.BackgroundColor3 = config.Default
-                ColorDisplay.Parent = ColorpickerFrame
-                ApplyCornerRadius(ColorDisplay, 4)
-
-                -- Add color picker functionality here
-                -- This is a simplified version - you might want to add a proper color picker UI
-                ColorButton.MouseButton1Click:Connect(function()
-                    local color = Color3.new(math.random(), math.random(), math.random())
-                    ColorDisplay.BackgroundColor3 = color
-                    config.Callback(color)
-                end)
-
-                return ColorpickerFrame
-            end
-
-            -- Add other element functions (Button, Textbox, etc.)
-            -- Make sure they all parent to Section.Container
-
+            
+            -- Add other element methods to Section here...
+            
             return Section
         end
 
