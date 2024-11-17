@@ -548,92 +548,28 @@ function UILib:MakeWindow(config)
         function Tab:AddButton(config)
             -- Validate config is a table
             assert(type(config) == "table", "AddButton requires a configuration table")
+            config.Name = config.Name or "Button"
+            config.Callback = config.Callback or function() end
             
-            -- Extract configuration
-            local name = config.Name or "Button"
-            local callback = config.Callback or function() end
-            
-            -- Create button elements
             local ButtonFrame = Instance.new("Frame")
+            ButtonFrame.Size = UDim2.new(1, 0, 0, 35)
+            ButtonFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+            ButtonFrame.BorderSizePixel = 0
+            ButtonFrame.Parent = self.Container
+            ApplyCornerRadius(ButtonFrame, 4)
+            
             local Button = Instance.new("TextButton")
-            local ButtonRipple = Instance.new("Frame")
-            
-            ButtonFrame.Name = name.."_Button"
-            ButtonFrame.Size = UDim2.new(1, -20, 0, 35)
-            ButtonFrame.BackgroundTransparency = 1
-            
-            Button.Name = "Button"
-            Button.Parent = ButtonFrame
-            Button.Size = UDim2.new(1, 0, 1, 0)
-            Button.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-            Button.BorderSizePixel = 0
-            Button.Text = name
-            Button.TextColor3 = Color3.fromRGB(255, 255, 255)
+            Button.Size = UDim2.new(1, -10, 1, 0)
+            Button.Position = UDim2.new(0, 5, 0, 0)
+            Button.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+            Button.Text = config.Name
+            Button.TextColor3 = Color3.fromRGB(200, 200, 200)
             Button.TextSize = 14
-            Button.Font = Enum.Font.Gotham
-            ApplyCornerRadius(Button, 6)
+            Button.Font = Enum.Font.GothamSemibold
+            Button.Parent = ButtonFrame
+            ApplyCornerRadius(Button, 4)
             
-            -- Button effects
-            local Hovering = false
-            
-            Button.MouseEnter:Connect(function()
-                Hovering = true
-                TweenService:Create(Button, TweenInfo.new(0.2), {
-                    BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-                }):Play()
-            end)
-            
-            Button.MouseLeave:Connect(function()
-                Hovering = false
-                TweenService:Create(Button, TweenInfo.new(0.2), {
-                    BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-                }):Play()
-            end)
-            
-            Button.MouseButton1Down:Connect(function()
-                TweenService:Create(Button, TweenInfo.new(0.1), {
-                    BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-                }):Play()
-                
-                -- Create ripple effect
-                local Ripple = Instance.new("Frame")
-                Ripple.Name = "Ripple"
-                Ripple.Parent = Button
-                Ripple.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-                Ripple.BackgroundTransparency = 0.8
-                Ripple.BorderSizePixel = 0
-                Ripple.Position = UDim2.new(0, 0, 0, 0)
-                Ripple.Size = UDim2.new(0, 0, 0, 0)
-                ApplyCornerRadius(Ripple, 6)
-                
-                local RippleTween = TweenService:Create(Ripple, TweenInfo.new(0.5), {
-                    Size = UDim2.new(1, 0, 1, 0),
-                    BackgroundTransparency = 1
-                })
-                
-                RippleTween.Completed:Connect(function()
-                    Ripple:Destroy()
-                end)
-                
-                RippleTween:Play()
-            end)
-            
-            Button.MouseButton1Up:Connect(function()
-                if Hovering then
-                    TweenService:Create(Button, TweenInfo.new(0.1), {
-                        BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-                    }):Play()
-                else
-                    TweenService:Create(Button, TweenInfo.new(0.1), {
-                        BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-                    }):Play()
-                end
-            end)
-            
-            -- Connect callback
-            Button.MouseButton1Click:Connect(function()
-                callback()
-            end)
+            Button.MouseButton1Click:Connect(config.Callback)
             
             return ButtonFrame
         end
@@ -1788,13 +1724,13 @@ function Section:AddBind(config)
     local BindButton = Instance.new("TextButton")
     BindButton.Size = UDim2.new(1, -10, 1, 0)
     BindButton.Position = UDim2.new(0, 5, 0, 0)
-    BindButton.BackgroundTransparency = 1
+    BindButton.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
     BindButton.Text = config.Name .. ": " .. config.Default.Name
     BindButton.TextColor3 = Color3.fromRGB(200, 200, 200)
     BindButton.TextSize = 14
     BindButton.Font = Enum.Font.GothamSemibold
-    BindButton.TextXAlignment = Enum.TextXAlignment.Left
     BindButton.Parent = BindFrame
+    ApplyCornerRadius(BindButton, 4)
 
     local listening = false
     local currentKey = config.Default
@@ -1852,6 +1788,241 @@ function Section:AddColorpicker(config)
     end)
 
     return ColorpickerFrame
+end
+
+function Section:AddButton(config)
+    assert(type(config) == "table", "AddButton requires a configuration table")
+    config.Name = config.Name or "Button"
+    config.Callback = config.Callback or function() end
+    
+    local ButtonFrame = Instance.new("Frame")
+    ButtonFrame.Size = UDim2.new(1, 0, 0, 35)
+    ButtonFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    ButtonFrame.BorderSizePixel = 0
+    ButtonFrame.Parent = self.Container
+    ApplyCornerRadius(ButtonFrame, 4)
+    
+    local Button = Instance.new("TextButton")
+    Button.Size = UDim2.new(1, -10, 1, 0)
+    Button.Position = UDim2.new(0, 5, 0, 0)
+    Button.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    Button.Text = config.Name
+    Button.TextColor3 = Color3.fromRGB(200, 200, 200)
+    Button.TextSize = 14
+    Button.Font = Enum.Font.GothamSemibold
+    Button.Parent = ButtonFrame
+    ApplyCornerRadius(Button, 4)
+    
+    Button.MouseButton1Click:Connect(config.Callback)
+    
+    return ButtonFrame
+end
+
+function Section:AddSlider(config)
+    assert(type(config) == "table", "AddSlider requires a configuration table")
+    config.Name = config.Name or "Slider"
+    config.Min = config.Min or 0
+    config.Max = config.Max or 100
+    config.Default = config.Default or config.Min
+    config.Increment = config.Increment or 1
+    config.ValueName = config.ValueName or ""
+    config.Callback = config.Callback or function() end
+    
+    local SliderFrame = Instance.new("Frame")
+    SliderFrame.Size = UDim2.new(1, 0, 0, 50)
+    SliderFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    SliderFrame.BorderSizePixel = 0
+    SliderFrame.Parent = self.Container
+    ApplyCornerRadius(SliderFrame, 4)
+    
+    local SliderLabel = Instance.new("TextLabel")
+    SliderLabel.Text = config.Name
+    SliderLabel.Size = UDim2.new(1, -10, 0, 20)
+    SliderLabel.Position = UDim2.new(0, 5, 0, 5)
+    SliderLabel.BackgroundTransparency = 1
+    SliderLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+    SliderLabel.TextSize = 14
+    SliderLabel.Font = Enum.Font.GothamSemibold
+    SliderLabel.TextXAlignment = Enum.TextXAlignment.Left
+    SliderLabel.Parent = SliderFrame
+    
+    local SliderValue = Instance.new("TextLabel")
+    SliderValue.Size = UDim2.new(0, 50, 0, 20)
+    SliderValue.Position = UDim2.new(1, -55, 0, 5)
+    SliderValue.BackgroundTransparency = 1
+    SliderValue.Text = tostring(config.Default) .. " " .. config.ValueName
+    SliderValue.TextColor3 = Color3.fromRGB(200, 200, 200)
+    SliderValue.TextSize = 14
+    SliderValue.Font = Enum.Font.GothamSemibold
+    SliderValue.Parent = SliderFrame
+    
+    local SliderBG = Instance.new("Frame")
+    SliderBG.Size = UDim2.new(1, -10, 0, 10)
+    SliderBG.Position = UDim2.new(0, 5, 0, 30)
+    SliderBG.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    SliderBG.BorderSizePixel = 0
+    SliderBG.Parent = SliderFrame
+    ApplyCornerRadius(SliderBG, 4)
+    
+    local SliderFill = Instance.new("Frame")
+    SliderFill.Size = UDim2.new(0, 0, 1, 0)
+    SliderFill.BackgroundColor3 = config.Color or Color3.fromRGB(0, 170, 255)
+    SliderFill.BorderSizePixel = 0
+    SliderFill.Parent = SliderBG
+    ApplyCornerRadius(SliderFill, 4)
+    
+    -- Add slider functionality here
+    local dragging = false
+    local function updateSlider(input)
+        local pos = UDim2.new(math.clamp((input.Position.X - SliderBG.AbsolutePosition.X) / SliderBG.AbsoluteSize.X, 0, 1), 0, 1, 0)
+        SliderFill.Size = pos
+        local value = math.floor((((pos.X.Scale * config.Max) / config.Max) * (config.Max - config.Min) + config.Min) / config.Increment + 0.5) * config.Increment
+        SliderValue.Text = tostring(value) .. " " .. config.ValueName
+        config.Callback(value)
+    end
+    
+    SliderBG.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+            updateSlider(input)
+        end
+    end)
+    
+    UserInputService.InputChanged:Connect(function(input)
+        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+            updateSlider(input)
+        end
+    end)
+    
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = false
+        end
+    end)
+    
+    return SliderFrame
+end
+
+function Section:AddDropdown(config)
+    assert(type(config) == "table", "AddDropdown requires a configuration table")
+    config.Name = config.Name or "Dropdown"
+    config.Default = config.Default or ""
+    config.Options = config.Options or {}
+    config.Callback = config.Callback or function() end
+    
+    local DropdownFrame = Instance.new("Frame")
+    DropdownFrame.Size = UDim2.new(1, 0, 0, 35)
+    DropdownFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    DropdownFrame.BorderSizePixel = 0
+    DropdownFrame.Parent = self.Container
+    ApplyCornerRadius(DropdownFrame, 4)
+    
+    local DropdownButton = Instance.new("TextButton")
+    DropdownButton.Size = UDim2.new(1, -10, 1, 0)
+    DropdownButton.Position = UDim2.new(0, 5, 0, 0)
+    DropdownButton.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    DropdownButton.Text = config.Name .. ": " .. config.Default
+    DropdownButton.TextColor3 = Color3.fromRGB(200, 200, 200)
+    DropdownButton.TextSize = 14
+    DropdownButton.Font = Enum.Font.GothamSemibold
+    DropdownButton.Parent = DropdownFrame
+    ApplyCornerRadius(DropdownButton, 4)
+    
+    local OptionContainer = Instance.new("Frame")
+    OptionContainer.Size = UDim2.new(1, 0, 0, #config.Options * 25)
+    OptionContainer.Position = UDim2.new(0, 0, 1, 5)
+    OptionContainer.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    OptionContainer.BorderSizePixel = 0
+    OptionContainer.Visible = false
+    OptionContainer.Parent = DropdownFrame
+    ApplyCornerRadius(OptionContainer, 4)
+    
+    local UIListLayout = Instance.new("UIListLayout")
+    UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    UIListLayout.Parent = OptionContainer
+    
+    for _, option in ipairs(config.Options) do
+        local OptionButton = Instance.new("TextButton")
+        OptionButton.Size = UDim2.new(1, 0, 0, 25)
+        OptionButton.BackgroundTransparency = 1
+        OptionButton.Text = option
+        OptionButton.TextColor3 = Color3.fromRGB(200, 200, 200)
+        OptionButton.TextSize = 14
+        OptionButton.Font = Enum.Font.GothamSemibold
+        OptionButton.Parent = OptionContainer
+        
+        OptionButton.MouseButton1Click:Connect(function()
+            DropdownButton.Text = config.Name .. ": " .. option
+            OptionContainer.Visible = false
+            config.Callback(option)
+        end)
+    end
+    
+    DropdownButton.MouseButton1Click:Connect(function()
+        OptionContainer.Visible = not OptionContainer.Visible
+    end)
+    
+    return DropdownFrame
+end
+
+function Section:AddBind(config)
+    assert(type(config) == "table", "AddBind requires a configuration table")
+    config.Name = config.Name or "Keybind"
+    config.Default = config.Default or Enum.KeyCode.E
+    config.Hold = config.Hold or false
+    config.Callback = config.Callback or function() end
+    
+    local BindFrame = Instance.new("Frame")
+    BindFrame.Size = UDim2.new(1, 0, 0, 35)
+    BindFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    BindFrame.BorderSizePixel = 0
+    BindFrame.Parent = self.Container
+    ApplyCornerRadius(BindFrame, 4)
+    
+    local BindButton = Instance.new("TextButton")
+    BindButton.Size = UDim2.new(1, -10, 1, 0)
+    BindButton.Position = UDim2.new(0, 5, 0, 0)
+    BindButton.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    BindButton.Text = config.Name .. ": " .. config.Default.Name
+    BindButton.TextColor3 = Color3.fromRGB(200, 200, 200)
+    BindButton.TextSize = 14
+    BindButton.Font = Enum.Font.GothamSemibold
+    BindButton.Parent = BindFrame
+    ApplyCornerRadius(BindButton, 4)
+    
+    local listening = false
+    
+    BindButton.MouseButton1Click:Connect(function()
+        listening = true
+        BindButton.Text = "Press a key..."
+    end)
+    
+    UserInputService.InputBegan:Connect(function(input)
+        if listening and input.UserInputType == Enum.UserInputType.Keyboard then
+            local key = input.KeyCode
+            BindButton.Text = config.Name .. ": " .. key.Name
+            listening = false
+            config.Default = key
+            
+            if not config.Hold then
+                config.Callback()
+            end
+        elseif not listening and input.KeyCode == config.Default then
+            if config.Hold then
+                config.Callback()
+            end
+        end
+    end)
+    
+    if config.Hold then
+        UserInputService.InputEnded:Connect(function(input)
+            if input.KeyCode == config.Default then
+                config.Callback()
+            end
+        end)
+    end
+    
+    return BindFrame
 end
 
 return UILib
